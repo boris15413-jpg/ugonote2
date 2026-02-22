@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html><body>
+<script>
+// Generate icons as canvas-drawn PNGs
+function drawIcon(size) {
+  const c = document.createElement('canvas');
+  c.width = size; c.height = size;
+  const x = c.getContext('2d');
+  // Background
+  const g = x.createLinearGradient(0, 0, 0, size);
+  g.addColorStop(0, '#FF8800'); g.addColorStop(1, '#FF6600');
+  x.fillStyle = g;
+  x.beginPath();
+  x.roundRect(0, 0, size, size, size * 0.15);
+  x.fill();
+  // Play triangle
+  x.fillStyle = '#fff';
+  const cx = size * 0.5, cy = size * 0.45, r = size * 0.2;
+  x.beginPath();
+  x.moveTo(cx - r * 0.6, cy - r); x.lineTo(cx + r * 0.8, cy); x.lineTo(cx - r * 0.6, cy + r);
+  x.closePath(); x.fill();
+  // Pencil icon
+  x.strokeStyle = '#fff'; x.lineWidth = size * 0.04; x.lineCap = 'round';
+  const px = size * 0.3, py = size * 0.7, pe = size * 0.7, pey = size * 0.35;
+  x.beginPath(); x.moveTo(px, py); x.lineTo(pe, pey); x.stroke();
+  // Text
+  x.fillStyle = '#fff'; x.font = `bold ${size * 0.1}px sans-serif`;
+  x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillText('DRAW', size * 0.5, size * 0.82);
+  return c;
+}
+[192, 512].forEach(s => {
+  const c = drawIcon(s);
+  const a = document.createElement('a');
+  a.href = c.toDataURL('image/png');
+  a.download = `icon-${s}.png`;
+  a.click();
+});
+// Maskable (with more padding)
+const mc = document.createElement('canvas');
+mc.width = 512; mc.height = 512;
+const mx = mc.getContext('2d');
+mx.fillStyle = '#FF6600'; mx.fillRect(0, 0, 512, 512);
+const inner = drawIcon(360);
+mx.drawImage(inner, 76, 76);
+const ma = document.createElement('a');
+ma.href = mc.toDataURL('image/png');
+ma.download = 'icon-maskable.png';
+ma.click();
+document.write('<h2>Icons Generated! Check downloads.</h2>');
+</script>
+</body></html>
