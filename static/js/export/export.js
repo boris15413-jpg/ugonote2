@@ -223,7 +223,6 @@
   }
 
   EX.exportVideo = async quality => {
-    // UniMuxer（Mp4Muxer改） と Mp4Muxer のどちらでも動くように自動判別
     const MuxerClass = window.UniMuxer || window.Mp4Muxer;
     if (typeof window.VideoEncoder === 'undefined' || !MuxerClass) {
       return E.toast('このブラウザはMP4出力機能に非対応です');
@@ -341,11 +340,11 @@
           const frameCount = Math.min(framesPerChunk, totalFrames - offset);
           try {
             const audioData = new AudioData({
-              format: 'f32', // ★ iOS Safari地雷対策: planarをやめてf32(インターリーブ)にする
+              format: 'f32', 
               sampleRate: 44100,
               numberOfChannels: 2,
               numberOfFrames: framesPerChunk,
-              timestamp: Math.round((offset / 44100) * 1000000), // ★ タイムスタンプの整数化
+              timestamp: Math.round((offset / 44100) * 1000000), 
               data: getInterleavedData(audioBuffer, offset, frameCount, framesPerChunk)
             });
             audioEncoder.encode(audioData);
