@@ -165,7 +165,6 @@
     dc.globalAlpha = 1;
   };
 
-  // ★ 魔法: 制御点が増えすぎないように、無駄な直線の点を間引くアルゴリズム
   function simplifyDP(pts, tolerance) {
     if (!pts || pts.length <= 2) return pts;
     var sqTolerance = tolerance * tolerance;
@@ -240,7 +239,6 @@
       }
     }
     
-    // 間引き処理をかけて制御点だらけになるのを防ぐ
     pts = simplifyDP(pts, 0.5); 
 
     var vp = G.VectorPaths.createPath('cut_stroke', pts, {
@@ -426,7 +424,6 @@
       if(S.sel.lasso){ tc2.beginPath(); S.sel.lasso.forEach(function(p,i){ var cx2 = (p.x - S.sel.x) * dpr, cy2 = (p.y - S.sel.y) * dpr; if(i) tc2.lineTo(cx2, cy2); else tc2.moveTo(cx2, cy2); }); tc2.closePath(); tc2.clip(); }
       tc2.drawImage(E.curC(), pX, pY, pW, pH, 0, 0, pW, pH);
 
-      // バックアップのみ保存し、履歴(Undo)はここでは作らない
       var originalRaster = E.curX().getImageData(0, 0, S.CW*dpr, S.CH*dpr);
       var originalVectors = G.VectorPaths ? JSON.parse(JSON.stringify(G.VectorPaths.getFramePaths(E.curId(), S.cl))) : [];
 
@@ -480,19 +477,16 @@
     var td = S.transformData; S.transformData = null; 
     U.$('transformHud').classList.remove('show');
     
-    // 変形後の現在の状態（ラスターとベクター）を記録
     var currentRaster = E.curX().getImageData(0, 0, S.CW*C.DPR, S.CH*C.DPR);
     var currentVectors = G.VectorPaths ? JSON.parse(JSON.stringify(G.VectorPaths.getFramePaths(E.curId(), S.cl))) : [];
     
-    // 一度オリジナルに戻して、そこからUndoの履歴を開始する（これによりUndoで完璧に戻る）
     E.curX().putImageData(td.originalRaster, 0, 0);
     if(G.VectorPaths) {
       var fm = S.vectorPaths.get(E.curId());
       if(fm) fm.set(S.cl, td.originalVectors);
     }
-    E.pushUndo(); // ★ここで初めて履歴を作る
+    E.pushUndo(); 
 
-    // 再び切り抜き状態を適用
     E.curX().putImageData(currentRaster, 0, 0);
     if(G.VectorPaths) {
       var fm = S.vectorPaths.get(E.curId());
@@ -526,7 +520,6 @@
     var td = S.transformData; S.transformData = null; 
     U.$('transformHud').classList.remove('show');
     
-    // キャンセル時はバックアップしたオリジナル画像を直接貼り直す
     E.curX().putImageData(td.originalRaster, 0, 0);
     if(G.VectorPaths) {
       S.vectorPaths.get(E.curId()).set(S.cl, td.originalVectors);
@@ -534,7 +527,7 @@
     }
     
     R.contexts.floatC.clearRect(0, 0, S.CW, S.CH);
-    S.transformMode = false; E.afterEdit(); // Undoを作らずに終わる
+    S.transformMode = false; E.afterEdit(); 
   };
 
   T.pasteAt = function(px, py){
