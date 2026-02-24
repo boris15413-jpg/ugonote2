@@ -1,0 +1,409 @@
+/* ====== EDITOR - Flipnote Studio DSi/Switch aesthetic ====== */
+#editorScreen { flex-direction:column; }
+.ed-layout { display:flex; flex-direction:column; height:100dvh; width:100%; background:var(--bg); overflow:hidden; }
+
+/* ===== Upper Area (canvas + layers) ===== */
+.ed-upper {
+  flex:1; display:flex; position:relative; overflow:hidden;
+  background:#E8E4E0; min-height:0;
+}
+
+/* Undo/Redo - top left corner floating */
+.ed-undo-area {
+  position:absolute; top:8px; left:36px; z-index:50;
+  display:flex; gap:4px;
+}
+.ed-undo-btn {
+  width:30px; height:30px; border-radius:50%;
+  background:rgba(255,255,255,.90); border:2px solid var(--primary);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; color:var(--primary); padding:0;
+  box-shadow:0 2px 6px rgba(0,0,0,.15);
+  transition:transform .08s;
+}
+.ed-undo-btn:hover { background:var(--primary-pale); }
+.ed-undo-btn:active { transform:scale(.88); }
+.ed-undo-btn svg { width:15px; height:15px; }
+
+/* Layer Tabs - left edge, vertical stack (Flipnote A/B/C/D style) */
+.ed-layer-tabs {
+  display:flex; flex-direction:column; gap:1px;
+  position:absolute; left:0; top:50%; transform:translateY(-50%);
+  z-index:50;
+}
+.layer-tab {
+  width:30px; height:34px;
+  background:#fff; border:2px solid var(--primary);
+  border-left:none; border-radius:0 8px 8px 0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; font-weight:900; color:var(--primary);
+  cursor:pointer; transition:all .08s;
+  box-shadow:2px 0 4px rgba(0,0,0,.06);
+}
+.layer-tab.on {
+  background:var(--primary); color:#fff;
+  box-shadow:2px 0 8px rgba(245,132,31,.35);
+}
+.layer-tab:hover:not(.on) { background:var(--primary-pale); }
+
+/* Canvas Viewport */
+.ed-viewport {
+  flex:1; position:relative; overflow:hidden;
+  display:flex; align-items:center; justify-content:center; touch-action:none;
+  margin-left:30px;
+}
+.ed-viewport.blocked { pointer-events:none; }
+.ed-canvas-wrap {
+  position:relative;
+  box-shadow:0 4px 20px rgba(0,0,0,.22);
+  border:2px solid #bbb;
+  transform-origin:center center;
+  cursor:crosshair; background:#fff; flex-shrink:0; touch-action:none;
+}
+.ed-canvas-wrap canvas { position:absolute; top:0; left:0; width:100%; height:100%; display:block; }
+#bgC { z-index:1; }
+#lC { z-index:3; } #lB { z-index:4; } #lA { z-index:5; }
+#onC { z-index:6; pointer-events:none; }
+#strokeC { z-index:9; pointer-events:none; }
+#drC { z-index:10; touch-action:none; }
+#floatC { z-index:11; pointer-events:none; }
+#selBox { position:absolute; border:2px dashed #000; background:rgba(255,255,0,.12); display:none; pointer-events:none; z-index:12; }
+#selPath { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:12; }
+
+/* Viewport badges */
+.vp-badge {
+  position:absolute; top:6px; background:rgba(0,0,0,.50);
+  color:#fff; font-size:9px; font-weight:900;
+  padding:2px 7px; border-radius:3px; z-index:30; pointer-events:none;
+}
+.zoom-badge { left:6px; }
+.ratio-badge { right:6px; }
+
+/* Image HUD */
+.img-hud {
+  position:absolute; top:8px; left:50%; transform:translateX(-50%); z-index:40;
+  background:rgba(0,0,0,.72); color:#fff; border-radius:20px;
+  padding:5px 14px; font-size:11px; font-weight:900;
+  display:none; align-items:center; gap:8px; white-space:nowrap; pointer-events:auto;
+}
+.img-hud.show { display:flex; }
+.hud-btn { margin:0; padding:3px 10px; font-size:10px; font-weight:900; font-family:var(--font); background:var(--primary); color:#fff; border:none; border-radius:12px; cursor:pointer; }
+.hud-btn.sec { background:#888; }
+
+/* Frame counter + color indicators - top right */
+.ed-frame-info {
+  position:absolute; top:8px; right:8px; z-index:50;
+  display:flex; align-items:center; gap:8px;
+}
+.ed-frame-num {
+  background:rgba(0,0,0,.50); color:#fff;
+  font-size:10px; font-weight:900; padding:3px 9px; border-radius:4px;
+  cursor:pointer; letter-spacing:.5px;
+}
+.ed-color-indicators { display:flex; flex-direction:column; gap:2px; }
+.color-ind {
+  width:20px; height:20px; border-radius:50%;
+  border:2px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.25);
+}
+.color-ind.sub { margin-top:-8px; margin-left:8px; width:14px; height:14px; }
+
+/* ===== Playback Bar (between upper canvas and lower panel) ===== */
+.ed-playback-bar {
+  display:flex; justify-content:center; align-items:center;
+  gap:6px; padding:6px 14px;
+  background:var(--bg-warm);
+  border-top:2px solid var(--border);
+  border-bottom:2px solid var(--border);
+  flex-shrink:0;
+}
+.pb-btn {
+  width:32px; height:32px;
+  border:2px solid var(--primary); background:#fff;
+  border-radius:8px; display:inline-flex; align-items:center; justify-content:center;
+  cursor:pointer; color:var(--primary); padding:0;
+  box-shadow:0 1px 2px rgba(0,0,0,.06);
+  transition:transform .06s;
+}
+.pb-btn:hover { background:var(--primary-pale); }
+.pb-btn:active { transform:translateY(1px); box-shadow:none; }
+.pb-btn svg { width:16px; height:16px; }
+.pb-btn.play-main {
+  width:44px; height:36px;
+  background:var(--primary); color:#fff;
+  border-radius:50%; border:3px solid #fff;
+  box-shadow:0 2px 8px rgba(245,132,31,.4);
+}
+.pb-btn.play-main:hover { background:var(--primary-light); }
+.pb-btn.play-main svg { width:20px; height:20px; }
+.pb-btn.small { width:28px; height:28px; margin-left:8px; }
+.pb-btn.small svg { width:14px; height:14px; }
+
+/* ===== Lower Area (tool panel) ===== */
+.ed-lower {
+  display:flex; position:relative; flex-shrink:0;
+  min-height:0; max-height:45%;
+}
+
+/* Tool Panel */
+.ed-tool-panel {
+  flex:1; display:flex; flex-direction:column;
+  background:var(--bg-warm); border-top:2px solid var(--primary);
+  overflow-y:auto; max-height:100%;
+}
+.ed-tool-panel::-webkit-scrollbar { width:4px; }
+.ed-tool-panel::-webkit-scrollbar-thumb { background:var(--primary-light); border-radius:2px; }
+
+/* Panel Tabs */
+.panel-tabs {
+  display:flex; border-bottom:2px solid var(--border);
+  flex-shrink:0; background:#fff;
+}
+.panel-tab {
+  flex:1; padding:7px 4px; text-align:center;
+  font-size:11px; font-weight:900; color:var(--text-light);
+  cursor:pointer; border-bottom:3px solid transparent;
+  transition:all .08s;
+}
+.panel-tab.on { color:var(--primary); border-bottom-color:var(--primary); background:var(--primary-pale); }
+.panel-tab:hover { background:rgba(245,132,31,.06); }
+
+/* Tab content */
+.ptab-content { display:none; flex-direction:column; overflow-y:auto; }
+.ptab-content.on { display:flex; }
+
+/* Panel sections */
+.pnl-section { padding:8px 10px; border-bottom:1px dashed var(--border); }
+.pnl-label { font-size:10px; font-weight:900; color:var(--primary-dark); margin-bottom:5px; letter-spacing:.5px; }
+
+/* Tool grid (Flipnote style - compact) */
+.tool-grid { display:flex; flex-wrap:wrap; gap:3px; }
+.tool-btn {
+  width:38px; height:34px;
+  background:#fff; border:2px solid var(--primary);
+  border-radius:6px; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  font-size:7px; font-weight:900; cursor:pointer;
+  color:var(--text); transition:all .06s;
+}
+.tool-btn:hover { background:var(--primary-pale); }
+.tool-btn:active { transform:translate(1px,1px); }
+.tool-btn.on { background:var(--primary); color:#fff; }
+.tool-btn svg { width:14px; height:14px; }
+
+/* Color grid (Flipnote style palette dots) */
+.color-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:5px; }
+.color-dot {
+  aspect-ratio:1; border-radius:50%; border:2px solid rgba(0,0,0,.1);
+  cursor:pointer; transition:transform .08s; position:relative;
+}
+.color-dot:hover { transform:scale(1.12); }
+.color-dot.on {
+  transform:scale(1.18); border-color:#333;
+  box-shadow:0 1px 5px rgba(0,0,0,.25);
+}
+.color-dot.on::after {
+  content:''; position:absolute; top:50%; left:50%;
+  transform:translate(-50%,-50%); width:4px; height:4px;
+  background:#fff; border-radius:50%; border:1px solid #000;
+}
+.custom-color-row { margin-top:5px; display:flex; align-items:center; gap:5px; font-size:9px; font-weight:700; }
+.custom-color-row input[type=color] { width:28px; height:22px; border:2px solid var(--border-strong); border-radius:3px; cursor:pointer; padding:0; }
+
+/* SV Picker */
+.sv-picker-area { position:relative; cursor:crosshair; margin-bottom:5px; }
+.sv-picker-area canvas { border-radius:4px; display:block; width:100%; }
+.sv-cursor { position:absolute; width:10px; height:10px; border:2px solid #fff; border-radius:50%; box-shadow:0 0 2px rgba(0,0,0,.5); pointer-events:none; transform:translate(-50%,-50%); }
+.hue-bar-area { position:relative; cursor:crosshair; margin-bottom:5px; }
+.hue-bar-area canvas { border-radius:4px; display:block; width:100%; height:12px; }
+.hue-cursor { position:absolute; top:-2px; width:6px; height:16px; border:2px solid #fff; border-radius:3px; box-shadow:0 0 2px rgba(0,0,0,.5); pointer-events:none; }
+.hex-row { display:flex; align-items:center; gap:4px; font-size:10px; font-weight:700; }
+.hex-row input { width:65px; padding:2px 5px; border:2px solid var(--primary); border-radius:4px; font-size:10px; font-family:var(--font); font-weight:700; }
+
+/* Pen settings */
+.pen-size-row { display:flex; gap:6px; justify-content:center; align-items:center; margin:4px 0; }
+.pen-dot { border-radius:50%; background:var(--text); cursor:pointer; border:2px solid transparent; transition:all .06s; }
+.pen-dot.on { border-color:var(--primary); box-shadow:0 0 0 2px var(--primary-light); }
+.slider-row { display:flex; align-items:center; gap:4px; margin:4px 0; font-size:10px; font-weight:700; }
+.slider-row input[type=range] { flex:1; -webkit-appearance:none; height:4px; background:#ddd; border-radius:2px; outline:none; }
+.slider-row input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; background:var(--primary); border-radius:50%; cursor:pointer; }
+.outline-row { display:flex; align-items:center; gap:5px; margin:4px 0; font-size:9px; font-weight:700; flex-wrap:wrap; }
+.outline-opts { display:none; align-items:center; gap:4px; }
+.outline-opts.show { display:flex; }
+
+/* Zoom row */
+.zoom-row { display:flex; gap:4px; }
+
+/* Small buttons (Flipnote rounded style) */
+.sm-btn {
+  padding:4px 10px; font-size:10px; font-weight:900; font-family:var(--font);
+  background:#fff; border:2px solid var(--primary); border-radius:6px;
+  cursor:pointer; color:var(--text); transition:transform .06s;
+}
+.sm-btn:hover { background:var(--primary-pale); }
+.sm-btn:active { transform:translateY(1px); }
+.sm-btn.primary { background:var(--primary); color:#fff; }
+.sm-btn.rec { background:#c33; color:#fff; border-color:#a22; }
+
+/* Panel buttons */
+.pnl-btn {
+  width:100%; background:#fff; border:2px solid var(--primary);
+  border-radius:6px; padding:5px 8px; font-family:var(--font);
+  font-size:10px; font-weight:900; color:var(--text); cursor:pointer;
+  display:flex; align-items:center; justify-content:center; gap:3px; margin-bottom:2px;
+  transition:all .06s;
+}
+.pnl-btn:hover { background:var(--primary-pale); }
+.pnl-btn:active { transform:translateY(1px); }
+.pnl-btn.on { background:var(--primary); color:#fff; }
+.pnl-btn.danger { color:#c00; border-color:#c00; }
+.pnl-btn.back { background:var(--primary); color:#fff; }
+
+/* Layer list */
+.layer-row {
+  display:flex; align-items:center; gap:4px; margin-bottom:2px;
+  background:#fff; padding:4px 6px; border:2px solid transparent;
+  border-radius:5px; cursor:pointer; font-size:10px; font-weight:700;
+}
+.layer-row.on { border-color:var(--primary); background:#FFF0E0; }
+.layer-vis { width:18px; height:18px; cursor:pointer; opacity:.2; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.layer-vis.on { opacity:1; color:var(--primary); }
+.layer-vis svg { width:13px; height:13px; }
+.layer-acts { display:flex; gap:2px; margin-left:auto; flex-shrink:0; }
+.layer-acts button { width:18px; height:18px; border-radius:3px; border:1px solid var(--primary); background:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; }
+.layer-acts button:hover { background:var(--primary-pale); }
+.layer-acts button svg { width:10px; height:10px; }
+.layer-btns { display:flex; gap:4px; margin-top:5px; }
+
+/* Frame context menu (floating - Flipnote style) */
+.ed-frame-menu {
+  position:absolute; right:12px; top:50%; transform:translateY(-50%);
+  z-index:100; display:flex; flex-direction:column; gap:3px;
+}
+.fm-btn {
+  padding:8px 18px; background:#fff; border:2px solid var(--primary);
+  border-radius:var(--radius); font-family:var(--font);
+  font-size:11px; font-weight:900; color:var(--text);
+  cursor:pointer; box-shadow:var(--shadow);
+  text-align:center; transition:all .06s;
+}
+.fm-btn:hover { background:var(--primary-pale); }
+.fm-btn:active { transform:translateY(1px); }
+
+.ed-frame-menu-toggle {
+  position:absolute; right:12px; bottom:12px; z-index:99;
+  width:32px; height:32px; border-radius:50%;
+  background:#fff; border:2px solid var(--primary);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; color:var(--text); padding:0;
+  box-shadow:var(--shadow);
+}
+.ed-frame-menu-toggle:hover { background:var(--primary-pale); }
+
+/* ===== Film Strip Timeline (classic film-strip aesthetic) ===== */
+.ed-filmstrip-wrap {
+  display:flex; flex-direction:column; flex-shrink:0;
+  background:#3a3230;
+  border-top:3px solid var(--primary-dark);
+}
+.ed-tl-controls {
+  display:flex; align-items:center; gap:5px;
+  padding:4px 10px; background:#5a4a42;
+  flex-shrink:0;
+}
+.ed-tl-controls span { color:#fff; font-size:9px; font-weight:900; white-space:nowrap; }
+.ed-tl-controls input[type=range] { -webkit-appearance:none; width:55px; height:3px; background:rgba(255,255,255,.3); border-radius:2px; outline:none; }
+.ed-tl-controls input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:12px; height:12px; background:#fff; border:2px solid var(--primary); border-radius:50%; cursor:pointer; }
+.tl-btn {
+  height:20px; padding:0 7px; font-size:9px; font-weight:900; font-family:var(--font);
+  background:#fff; border:1px solid var(--primary); border-radius:4px;
+  cursor:pointer; color:var(--text);
+}
+.tl-btn:hover { background:var(--primary-pale); }
+.tl-btn:active { transform:translateY(1px); }
+.tl-toggle {
+  margin-left:auto; width:22px; height:20px;
+  background:var(--primary); color:#fff; border:none; border-radius:4px;
+  display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0;
+}
+.tl-toggle.flipped svg { transform:rotate(180deg); }
+
+/* Film strip - sprocket holes aesthetic */
+.ed-filmstrip {
+  display:flex; align-items:center;
+  overflow-x:auto; padding:7px 10px; gap:5px;
+  min-height:62px;
+  background:
+    repeating-linear-gradient(90deg,
+      transparent 0px, transparent 12px,
+      rgba(255,255,255,.05) 12px, rgba(255,255,255,.05) 14px
+    );
+}
+.ed-filmstrip::-webkit-scrollbar { height:4px; }
+.ed-filmstrip::-webkit-scrollbar-thumb { background:var(--primary-light); border-radius:2px; }
+.ed-filmstrip.collapsed { min-height:0; height:0; overflow:hidden; padding:0; }
+
+/* Individual frames in filmstrip */
+.tl-frame {
+  width:58px; height:44px; background:#fff; border:2px solid #666;
+  flex-shrink:0; position:relative; cursor:pointer; border-radius:2px;
+  overflow:hidden; transition:all .08s;
+}
+.tl-frame canvas { width:100%; height:100%; display:block; }
+.tl-frame.on {
+  border:3px solid #FFDD00;
+  box-shadow:0 0 10px rgba(255,220,0,.55);
+  transform:scale(1.08); z-index:2;
+}
+.tl-frame-num {
+  position:absolute; bottom:0; right:0;
+  background:rgba(0,0,0,.6); color:#fff;
+  font-size:7px; padding:0 3px; border-top-left-radius:2px; font-weight:900;
+}
+.tl-frame-sfx {
+  position:absolute; top:0; left:0;
+  background:rgba(255,255,255,.85);
+  padding:0 2px; line-height:1;
+}
+.tl-frame-sfx svg { width:8px; height:8px; }
+
+/* Audio tab mini-styles (warm Flipnote theme) */
+.as-ctrl-row { display:flex; align-items:center; gap:5px; margin:4px 0; font-size:10px; font-weight:700; flex-wrap:wrap; }
+.as-ctrl-row select { padding:3px 6px; border-radius:4px; font-family:var(--font); font-size:9px; font-weight:700; border:1px solid var(--border); background:#fff; }
+.as-ctrl-row input[type=range] { flex:1; -webkit-appearance:none; height:3px; background:#ddd; border-radius:2px; outline:none; }
+.as-ctrl-row input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; background:var(--primary); border-radius:50%; cursor:pointer; }
+.as-file-btn { display:inline-flex; align-items:center; gap:3px; padding:4px 10px; background:#fff; border:1px solid var(--primary); border-radius:5px; font-family:var(--font); font-size:9px; font-weight:700; cursor:pointer; color:var(--text); }
+.as-file-btn:hover { background:var(--primary-pale); }
+
+/* Mini waveform in tab */
+.as-waveform-mini { position:relative; background:#f5f0eb; border:1px solid var(--border); border-radius:4px; overflow:hidden; }
+.as-waveform-mini canvas { width:100%; height:60px; display:block; }
+.as-playhead { position:absolute; top:0; bottom:0; left:0; width:2px; background:var(--primary); z-index:2; pointer-events:none; }
+.as-duration { font-size:9px; font-weight:700; color:var(--primary); }
+
+/* ===== Responsive ===== */
+@media(max-width:700px){
+  .ed-lower { flex-direction:column; }
+  .ed-tool-panel { max-height:280px; }
+  .tool-grid { gap:2px; }
+  .tool-btn { width:34px; height:30px; }
+  .tl-frame { width:48px; height:36px; }
+  .ed-filmstrip { min-height:52px; }
+  .ed-undo-btn { width:26px; height:26px; }
+  .ed-undo-btn svg { width:13px; height:13px; }
+  .layer-tab { width:26px; height:30px; font-size:12px; }
+  .ed-viewport { margin-left:26px; }
+  .ed-undo-area { left:32px; }
+}
+@media(min-width:1200px){
+  .tool-btn { width:42px; height:38px; font-size:8px; }
+  .tool-btn svg { width:16px; height:16px; }
+  .tl-frame { width:70px; height:53px; }
+  .ed-filmstrip { min-height:70px; }
+  .pb-btn { width:36px; height:36px; }
+  .pb-btn.play-main { width:48px; height:40px; }
+  .layer-tab { width:34px; height:38px; font-size:15px; }
+  .ed-viewport { margin-left:34px; }
+  .ed-undo-area { left:42px; }
+  .ed-undo-btn { width:34px; height:34px; }
+  .ed-undo-btn svg { width:17px; height:17px; }
+}

@@ -1,0 +1,1101 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>うごくノート Web</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+html,body{height:100%;overflow:hidden;font-family:'M PLUS Rounded 1c',sans-serif;background:var(--bg);color:#4A3728}
+:root{--o:#FF6600;--ol:#FF9933;--od:#CC4400;--bg:#F0F0F0;--t:#4A3728}
+#app{display:flex;flex-direction:column;height:100dvh;width:100%;background:var(--bg);position:relative;overflow:hidden}
+.topbar{background:linear-gradient(180deg,#FF8800,#FF6600);border-bottom:3px solid var(--od);padding:3px 6px;display:flex;justify-content:space-between;align-items:center;z-index:100;gap:4px;flex-shrink:0}
+.brand{color:#fff;font-weight:900;font-size:14px;text-shadow:1px 1px 0 var(--od);display:flex;align-items:center;gap:4px;white-space:nowrap}
+.brand svg{width:20px;height:20px;flex-shrink:0}
+.cg{display:flex;gap:3px;align-items:center}
+.bq{width:30px;height:30px;border:2px solid var(--od);background:#fff;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--t);box-shadow:0 2px 0 rgba(0,0,0,.12);font-family:inherit;font-size:10px;font-weight:900;flex-shrink:0;transition:transform .04s;padding:0}
+.bq:active{transform:translateY(2px);box-shadow:none}
+.bq.on{background:var(--ol);color:#fff;border-color:#fff}
+.bq svg{width:16px;height:16px}
+.bq.sm{width:auto;height:24px;padding:0 6px;font-size:9px;gap:2px;border-radius:5px}
+.pc{background:#fff;border:2px solid var(--od);border-radius:16px;padding:1px 4px;display:flex;gap:2px;align-items:center;height:30px;flex-shrink:0}
+.pgb{font-size:10px;font-weight:900;color:var(--o);min-width:36px;text-align:center;white-space:nowrap;cursor:pointer}
+.wk{flex:1;display:flex;overflow:hidden;min-height:0;position:relative}
+.tbl{background:#E8E0D4;border-right:2px solid var(--od);display:flex;flex-direction:column;align-items:center;padding:4px 2px;gap:3px;overflow-y:auto;overflow-x:hidden;flex-shrink:0;width:50px;scrollbar-width:none;z-index:10}
+.tbl::-webkit-scrollbar{display:none}
+.tb{width:40px;height:38px;border:2px solid var(--od);background:#fff;border-radius:7px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:7px;font-weight:900;cursor:pointer;box-shadow:1px 1px 0 rgba(0,0,0,.08);flex-shrink:0;color:var(--t)}
+.tb:active{transform:translate(1px,1px);box-shadow:none}
+.tb.on{background:var(--o);color:#fff}
+.tb svg{width:16px;height:16px;margin-bottom:1px}
+.tsep{height:1px;width:80%;background:var(--od);opacity:.3;flex-shrink:0}
+.vp{flex:1;background:#DDDAD6;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;touch-action:none}
+.vp.blocked{pointer-events:none}
+.cw{position:relative;box-shadow:0 6px 24px rgba(0,0,0,.25);border:3px solid #fff;transform-origin:center center;cursor:crosshair;background:#fff;flex-shrink:0;touch-action:none}
+.cw canvas{position:absolute;top:0;left:0;width:100%;height:100%;display:block}
+#bgC{z-index:1}#lPhoto{z-index:2}#lC{z-index:3}#lB{z-index:4}#lA{z-index:5}#onC{z-index:6;pointer-events:none}#strokeC{z-index:9;pointer-events:none}#drC{z-index:10;touch-action:none}#floatC{z-index:11;pointer-events:none}
+#selBox{position:absolute;border:2px dashed #000;background:rgba(255,255,0,.12);display:none;pointer-events:none;z-index:12}
+#selPath{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:12}
+.zbadge,.rbadge{position:absolute;top:6px;background:rgba(0,0,0,.5);color:#fff;font-size:9px;font-weight:900;padding:2px 6px;border-radius:3px;z-index:30;pointer-events:none}
+.zbadge{left:6px}.rbadge{right:6px}
+.img-hud{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:40;background:rgba(0,0,0,.75);color:#fff;border-radius:20px;padding:4px 14px;font-size:10px;font-weight:900;display:none;align-items:center;gap:8px;white-space:nowrap;pointer-events:auto}
+.img-hud.show{display:flex}
+.img-hud .mb{margin:0;padding:3px 10px;font-size:9px}
+.pr{background:#FFF8E7;border-left:2px solid var(--od);display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0;width:210px;scrollbar-width:thin;z-index:10}
+.pr::-webkit-scrollbar{width:4px}
+.pr::-webkit-scrollbar-thumb{background:var(--ol);border-radius:2px}
+.ps{padding:7px 8px;border-bottom:2px dashed #E0C0A0}
+.st{font-size:10px;font-weight:900;color:var(--od);margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;gap:3px}
+.lr{display:flex;align-items:center;gap:3px;margin-bottom:2px;background:#fff;padding:3px 4px;border:2px solid transparent;border-radius:5px;cursor:pointer;font-size:9px;font-weight:700}
+.lr.on{border-color:var(--o);background:#FFF0E0}
+.lv{width:18px;height:18px;cursor:pointer;opacity:.2;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.lv.on{opacity:1;color:var(--o)}
+.lv svg{width:14px;height:14px}
+.la{display:flex;gap:1px;margin-left:auto;flex-shrink:0}
+.la .bq{width:18px;height:18px;border-radius:3px;border-width:1px}
+.la .bq svg{width:10px;height:10px}
+.cg2{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.cs{aspect-ratio:1;border-radius:50%;border:2px solid rgba(0,0,0,.1);cursor:pointer;transition:transform .08s;position:relative}
+.cs:hover{transform:scale(1.1)}
+.cs.on{transform:scale(1.15);border-color:#333;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.cs.on::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:5px;height:5px;background:#fff;border-radius:50%;border:1px solid #000}
+.psg{display:flex;gap:4px;justify-content:center;align-items:center;margin-top:4px}
+.psb{border-radius:50%;background:var(--t);cursor:pointer;border:2px solid transparent;transition:all .08s}
+.psb.on{border-color:var(--o);box-shadow:0 0 0 2px var(--ol)}
+.osl{display:flex;align-items:center;gap:4px;margin-top:4px;font-size:9px;font-weight:700}
+.osl input[type=range]{flex:1;-webkit-appearance:none;height:4px;background:#ddd;border-radius:2px;outline:none}
+.osl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;background:var(--o);border-radius:50%;cursor:pointer}
+.por{display:flex;align-items:center;gap:4px;margin-top:4px;font-size:8px;font-weight:700;justify-content:center;flex-wrap:wrap}
+.por label{display:flex;align-items:center;gap:2px;background:#fff;border:2px solid var(--od);border-radius:5px;padding:2px 6px;cursor:pointer}
+.por label.on{border-color:var(--o);background:#FFF0E0}
+.por .opts{display:none;align-items:center;gap:3px}
+.por .opts.show{display:flex}
+.pb{width:100%;background:#fff;border:2px solid var(--od);border-radius:7px;padding:4px 6px;font-family:inherit;font-size:10px;font-weight:900;color:var(--t);cursor:pointer;display:flex;align-items:center;gap:4px;margin-bottom:2px;justify-content:center;box-shadow:0 1px 0 rgba(0,0,0,.06)}
+.pb:active{transform:translateY(1px);box-shadow:none}
+.pb.on{background:var(--o);color:#fff;border-color:#fff}
+.tla{height:88px;background:#5a4a42;border-top:3px solid var(--od);display:flex;flex-direction:column;flex-shrink:0}
+.tlc{height:24px;background:#7a6559;display:flex;align-items:center;padding:0 6px;gap:3px;flex-shrink:0}
+.tlc span{color:#fff;font-size:9px;font-weight:900;white-space:nowrap}
+.tlc input[type=range]{-webkit-appearance:none;width:55px;height:3px;background:rgba(255,255,255,.35);border-radius:2px;outline:none}
+.tlc input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;background:#fff;border:2px solid var(--od);border-radius:50%;cursor:pointer}
+.tlsp{width:1px;height:14px;background:rgba(255,255,255,.25);flex-shrink:0}
+.tls{flex:1;display:flex;align-items:center;overflow-x:auto;padding:5px 6px;gap:4px}
+.tls::-webkit-scrollbar{height:5px}
+.tls::-webkit-scrollbar-thumb{background:var(--ol);border-radius:2px}
+.ft{width:56px;height:42px;background:#fff;border:2px solid #777;flex-shrink:0;position:relative;cursor:pointer;border-radius:3px;overflow:hidden;transition:all .08s}
+.ft canvas{width:100%;height:100%;display:block}
+.ft.on{border:3px solid #FFDD00;box-shadow:0 0 10px rgba(255,220,0,.5);transform:scale(1.05);z-index:2}
+.fn{position:absolute;bottom:0;right:0;background:rgba(0,0,0,.65);color:#fff;font-size:7px;padding:0 2px;border-top-left-radius:2px;font-weight:900}
+.fsfx{position:absolute;top:0;left:0;background:rgba(255,255,255,.85);padding:0 2px;line-height:1}
+.fsfx svg{width:8px;height:8px}
+.mo{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.55);z-index:999;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .12s}
+.mo.show{opacity:1;pointer-events:all}
+.md{background:#FFF8E7;border:3px solid var(--o);border-radius:12px;padding:14px;width:90%;max-width:400px;box-shadow:0 8px 30px rgba(0,0,0,.4);text-align:center;max-height:85vh;overflow-y:auto}
+.md h3{color:var(--od);margin-bottom:8px;border-bottom:2px dashed var(--ol);padding-bottom:6px;font-size:13px}
+.mb{background:var(--o);color:#fff;border:none;padding:6px 16px;border-radius:16px;font-weight:900;font-family:inherit;cursor:pointer;margin:3px;font-size:11px;border-bottom:2px solid var(--od);display:inline-flex;align-items:center;gap:3px}
+.mb:active{transform:translateY(2px);border-bottom:none}
+.mb.sec{background:#888;border-color:#555}
+.pcg{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;justify-items:center}
+.pco{width:36px;height:36px;border-radius:7px;border:3px solid #ddd;cursor:pointer;transition:all .08s}
+.pco.on,.pco:hover{border-color:var(--o);transform:scale(1.08)}
+.rg{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.ro{background:#fff;border:3px solid #ddd;border-radius:8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;padding:6px;gap:3px;transition:all .08s;min-width:56px}
+.ro .rv{border:2px solid var(--t);background:#f5f0eb}
+.ro span{font-size:9px;font-weight:900}
+.ro.on{border-color:var(--o);background:#FFF3E0}
+.ar{display:flex;gap:4px;flex-wrap:wrap;justify-content:center;margin:4px 0}
+.ab{background:#fff;border:2px solid var(--od);border-radius:8px;padding:4px 10px;font-family:inherit;font-size:9px;font-weight:900;color:var(--t);cursor:pointer;display:flex;align-items:center;gap:3px}
+.ab:hover{background:#FFF3E0}
+.qs{display:flex;gap:4px;justify-content:center;margin:6px 0}
+.qs label{display:flex;align-items:center;gap:2px;font-size:10px;font-weight:700;cursor:pointer;background:#fff;border:2px solid #ddd;border-radius:6px;padding:3px 8px}
+.qs label.on{border-color:var(--o);background:#FFF3E0}
+.qs input{display:none}
+.ctx{position:fixed;background:#fff;border:2px solid var(--od);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.3);z-index:1100;min-width:140px;overflow:hidden;display:none;font-size:11px;font-weight:700}
+.ctx.show{display:block}
+.ctx-item{padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;border-bottom:1px solid #eee}
+.ctx-item:last-child{border-bottom:none}
+.ctx-item:hover{background:#FFF3E0}
+.toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.8);color:#fff;padding:10px 24px;border-radius:24px;font-size:12px;font-weight:900;pointer-events:none;opacity:0;transition:opacity .25s;z-index:1200;text-align:center;max-width:80vw}
+.toast.show{opacity:1}
+.mob-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:9;background:transparent}
+.mob-overlay.show{display:block}
+.save-ind{position:fixed;bottom:8px;right:8px;background:rgba(0,100,0,.7);color:#fff;font-size:9px;font-weight:900;padding:3px 8px;border-radius:4px;z-index:1100;pointer-events:none;opacity:0;transition:opacity .3s}
+.save-ind.show{opacity:1}
+@media(max-width:900px){
+  .pr{display:none;position:fixed;right:0;top:0;bottom:0;width:260px;z-index:200;border-left:3px solid var(--o);box-shadow:-4px 0 20px rgba(0,0,0,.3)}
+  .pr.show{display:flex}
+  .mob-overlay.show{z-index:199;background:rgba(0,0,0,.3)}
+  .tbl{position:fixed;left:0;top:0;bottom:0;z-index:180;width:54px;padding-top:44px;box-shadow:4px 0 16px rgba(0,0,0,.2);transform:translateX(-100%);transition:transform .2s}
+  .tbl.open{transform:translateX(0)}
+  .mob-tab{display:flex;position:fixed;z-index:185;background:var(--o);color:#fff;border:none;border-radius:0 6px 6px 0;width:22px;height:44px;align-items:center;justify-content:center;cursor:pointer;box-shadow:2px 0 6px rgba(0,0,0,.2);padding:0;left:0;top:50%;transform:translateY(-50%);transition:left .2s}
+  .mob-tab svg{width:14px;height:14px}
+  #mobTabTB.shifted{left:54px}
+  .mob-tab-tl{display:flex;position:relative;z-index:15;background:var(--o);color:#fff;border:none;border-radius:8px 8px 0 0;width:44px;height:18px;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 -2px 4px rgba(0,0,0,.12);padding:0;margin:0 auto;flex-shrink:0}
+  .mob-tab-tl svg{width:12px;height:12px;transition:transform .2s}
+  .mob-tab-tl.shifted svg{transform:rotate(180deg)}
+  .tla-wrap{display:flex;flex-direction:column;flex-shrink:0}
+  .tla.mob-hidden{height:0;overflow:hidden;border-top:none}
+}
+@media(min-width:901px){.mob-tab,.mob-tab-tl,.tla-wrap-toggle{display:none!important}.tla-wrap{display:contents}}
+@media(min-width:1200px){.tbl{width:58px}.tb{width:48px;height:44px;font-size:8px}.tb svg{width:18px;height:18px}.pr{width:260px}.ps{padding:10px 14px}.ft{width:72px;height:54px}.tla{height:102px}.bq{width:34px;height:34px}.bq svg{width:18px;height:18px}.topbar{padding:4px 12px}}
+@media(min-width:1600px){.tbl{width:64px}.tb{width:54px;height:48px;font-size:9px}.tb svg{width:20px;height:20px}.pr{width:300px}.st{font-size:12px}.pb{font-size:12px;padding:6px 10px;margin-bottom:4px}.ft{width:88px;height:66px}.tla{height:116px}.topbar{padding:5px 16px;gap:8px}.bq{width:36px;height:36px}.bq.sm{height:26px;font-size:10px;padding:0 8px}.pc{height:34px;padding:2px 8px;gap:5px;border-radius:20px}.pgb{font-size:12px;min-width:50px}.tlc{height:28px;padding:0 10px;gap:5px}.tlc span{font-size:10px}}
+@media(max-width:540px){.topbar{padding:2px 3px}.bq{width:26px;height:26px}.bq svg{width:14px;height:14px}.bq.sm{height:20px;font-size:7px;padding:0 4px}.pc{height:26px;padding:1px 3px;gap:1px}.pgb{font-size:8px;min-width:26px}.tla{height:74px}.ft{width:46px;height:35px}.tlc{height:20px}.tlc span{font-size:7px}.brand span{display:none}}
+</style>
+</head>
+<body>
+<div id="app">
+<div class="topbar">
+  <div class="brand"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#fff" opacity=".3"/><path d="M8 5v14l11-7z" fill="#fff"/></svg><span>うごくノート Web</span></div>
+  <div class="pc">
+    <div class="bq" id="firstFBtn" title="最初"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 18l-8.5-6L18 6v12zM8 6H6v12h2z"/></svg></div>
+    <div class="bq" id="prevFBtn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></div>
+    <div class="bq" id="playBtn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div>
+    <div class="bq" id="stopBtn" style="display:none"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="12" height="14" rx="1"/></svg></div>
+    <div class="bq" id="nextFBtn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></div>
+    <div class="bq" id="lastFBtn" title="最後"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6l8.5 6L6 18V6zm10 0h2v12h-2z"/></svg></div>
+    <div class="pgb" id="pgbClick" title="フレーム指定"><span id="curF">1</span>/<span id="totF">1</span></div>
+  </div>
+  <div class="cg">
+    <button class="bq" id="undoBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 14L4 9l5-5"/><path d="M20 20v-7a4 4 0 00-4-4H4"/></svg></button>
+    <button class="bq" id="redoBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 14l5-5-5-5"/><path d="M4 20v-7a4 4 0 014-4h12"/></svg></button>
+    <button class="bq" id="menuBtn" style="background:#444;color:#fff"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button>
+  </div>
+</div>
+<div class="wk">
+  <div class="tbl" id="toolbarL">
+    <div class="tb on" data-tool="pen"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>ペン</div>
+    <div class="tb" data-tool="eraser"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.14 3c-.51 0-1.02.2-1.41.59L2.59 14.73a2 2 0 000 2.83l2.58 2.61a2 2 0 002.83 0L19.14 9.03a2 2 0 000-2.83L16.55 3.59A2 2 0 0015.14 3z"/></svg>消す</div>
+    <div class="tb" data-tool="fill"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.56 8.94L8.94 16.56a1.5 1.5 0 01-2.12 0l-2.38-2.38a1.5 1.5 0 010-2.12L12.06 4.44a1.5 1.5 0 012.12 0l2.38 2.38a1.5 1.5 0 010 2.12z"/><path d="M19 14s3 3.5 3 5a3 3 0 01-6 0c0-1.5 3-5 3-5z" opacity=".5"/></svg>塗り</div>
+    <div class="tb" data-tool="line"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="19" x2="19" y2="5"/></svg>直線</div>
+    <div class="tb" data-tool="rect"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="1"/></svg>四角</div>
+    <div class="tb" data-tool="circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>丸</div>
+    <div class="tb" data-tool="text"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 4h14v3h-1.5V5.5h-5V18H14v1.5h-4V18h1.5V5.5h-5V7H5V4z"/></svg>文字</div>
+    <div class="tb" data-tool="select"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="4 3"><rect x="3" y="3" width="18" height="18" rx="1"/></svg>選択</div>
+    <div class="tb" data-tool="lasso"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.5 2 2 5.6 2 10c0 3 2.2 5.6 5.4 6.8-.2 1.4-.8 2.8-1.4 3.2 2-.2 4-1.2 5.2-2.6.3 0 .5 0 .8 0 5.5 0 10-3.6 10-8S17.5 2 12 2z" stroke-dasharray="3 3"/></svg>投げ縄</div>
+    <div class="tsep"></div>
+    <div class="tb" data-tool="hand"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 7v10a4 4 0 01-4 4h-5.3a4 4 0 01-2.83-1.17L2 12.96l1.2-1.12a1.5 1.5 0 011.16-.23l2.64 1V6a1 1 0 012 0v6h1V3.5a1 1 0 012 0V12h1V3a1 1 0 012 0v9.5h1V5.5a1 1 0 012 0z"/></svg>移動</div>
+    <div class="tsep"></div>
+    <div class="tb" id="zoomInBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35M8 11h6M11 8v6"/></svg></div>
+    <div class="tb" id="zoomOutBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35M8 11h6"/></svg></div>
+    <div class="tb" id="resetVBtn" style="font-size:9px">100%</div>
+  </div>
+  <div class="vp" id="vp">
+    <div class="cw" id="cw">
+      <canvas id="bgC"></canvas><canvas id="lPhoto"></canvas><canvas id="lC"></canvas><canvas id="lB"></canvas><canvas id="lA"></canvas><canvas id="onC"></canvas><canvas id="strokeC"></canvas><canvas id="drC"></canvas><canvas id="floatC"></canvas>
+      <div id="selBox"></div>
+      <svg id="selPath" xmlns="http://www.w3.org/2000/svg"><path id="lassoPath" fill="rgba(255,255,0,.15)" stroke="#000" stroke-width="2" stroke-dasharray="5 4" d=""/></svg>
+    </div>
+    <div class="zbadge" id="zDisp">100%</div>
+    <div class="rbadge" id="rBadge">4:3</div>
+    <div class="img-hud" id="imgHud"><span id="imgHudTxt">ドラッグ移動 / ピンチ拡縮</span><button class="mb" id="imgOk">決定</button><button class="mb sec" id="imgCn">取消</button></div>
+  </div>
+  <div class="pr" id="rPanel">
+    <div class="ps"><div class="st"><span>レイヤー</span><div style="display:flex;gap:2px"><button class="bq sm" id="addPhotoBtn">写真</button><button class="bq sm" id="mergeBtn">統合</button></div></div><div id="layerList"></div></div>
+    <div class="ps"><div class="st">カラー</div><div class="cg2">
+      <div class="cs on" style="background:#111" data-c="#111111"></div><div class="cs" style="background:#E02020" data-c="#E02020"></div><div class="cs" style="background:#2060E0" data-c="#2060E0"></div><div class="cs" style="background:#20A020" data-c="#20A020"></div><div class="cs" style="background:#F0C000" data-c="#F0C000"></div><div class="cs" style="background:#FF6B9D" data-c="#FF6B9D"></div><div class="cs" style="background:#9C27B0" data-c="#9C27B0"></div><div class="cs" style="background:#FF8C00" data-c="#FF8C00"></div><div class="cs" style="background:#8B4513" data-c="#8B4513"></div><div class="cs" style="background:#FFF;border-color:#ccc" data-c="#FFFFFF"></div>
+    </div><div style="margin-top:3px;display:flex;align-items:center;gap:4px;justify-content:center"><span style="font-size:8px;font-weight:700">カスタム:</span><input type="color" id="ccPick" value="#111111" style="width:26px;height:20px;border:2px solid var(--od);border-radius:3px;cursor:pointer;padding:0"></div></div>
+    <div class="ps"><div class="st">ペン / 透明度</div>
+      <div class="psg"><div class="psb" data-size="1" style="width:7px;height:7px"></div><div class="psb" data-size="2" style="width:10px;height:10px"></div><div class="psb on" data-size="4" style="width:14px;height:14px"></div><div class="psb" data-size="8" style="width:18px;height:18px"></div><div class="psb" data-size="16" style="width:24px;height:24px"></div></div>
+      <div class="osl"><span>透明度:</span><input type="range" id="alphaRng" min="5" max="100" value="100"><span id="alphaLbl">100%</span></div>
+      <div class="por"><label id="poLbl"><input type="checkbox" id="poChk" style="accent-color:var(--o)">縁取りペン</label><div class="opts" id="poOpts"><input type="color" id="poCol" value="#FFFFFF" style="width:20px;height:16px;border:1px solid var(--od);border-radius:2px;cursor:pointer;padding:0"><input type="range" id="poW" min="1" max="12" value="3" style="width:40px"></div></div>
+    </div>
+    <div class="ps"><div class="st">設定</div><button class="pb" id="onionBtn">透かし</button><button class="pb" id="paperBtn">紙色</button><button class="pb" id="ratioBtn">画面比率</button><button class="pb" id="rotateBtn">回転</button><button class="pb" id="flipHBtn">左右反転</button></div>
+    <div class="ps"><div class="st">音声</div><button class="pb" id="audioBtn">音声設定</button></div>
+    <div class="ps"><div class="st">保存 / 出力</div><button class="pb" id="saveBtn">プロジェクト保存</button><button class="pb" id="loadBtn">プロジェクト読込</button><button class="pb" id="expGifBtn">GIF出力</button><button class="pb" id="expMp4Btn">MP4出力</button><button class="pb" id="clrAllBtn">全消し</button></div>
+  </div>
+</div>
+<div class="tla-wrap" id="tlaWrap">
+  <button class="mob-tab-tl" id="mobTabTL"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg></button>
+  <div class="tla" id="tlArea">
+    <div class="tlc"><span>速度:<span id="fpsN">8</span>fps</span><input type="range" id="fpsR" min="1" max="30" value="8"><div class="tlsp"></div><button class="bq sm" id="cpFBtn">複写</button><button class="bq sm" id="psFBtn">貼付</button><div class="tlsp"></div><button class="bq sm" id="addFBtn">+1</button><button class="bq sm" id="addMFBtn">+N</button><button class="bq sm" id="delFBtn">Del</button></div>
+    <div class="tls" id="tls"></div>
+  </div>
+</div>
+</div>
+<button class="mob-tab" id="mobTabTB"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></button>
+</div>
+<div class="ctx" id="ctxMenu"><div class="ctx-item" data-ctx="undo">元に戻す</div><div class="ctx-item" data-ctx="redo">やり直し</div><div class="ctx-item" data-ctx="paste">貼り付け</div><div class="ctx-item" data-ctx="clear">レイヤークリア</div></div>
+<div class="mob-overlay" id="mobOv"></div>
+<input type="file" id="imgIn" accept="image/*" style="display:none">
+<input type="file" id="projIn" accept=".ugomemo" style="display:none">
+<div class="mo" id="selMo"><div class="md" style="width:230px"><h3>選択範囲</h3><button class="mb" id="selCpBtn">コピー</button><button class="mb" id="selCtBtn">カット</button><button class="mb" id="selOutBtn" style="background:#8B6914;border-color:#6B4F0A">縁取り</button><div style="margin:6px 0;display:flex;gap:4px;align-items:center;justify-content:center;flex-wrap:wrap"><span style="font-size:9px;font-weight:700">縁色:</span><input type="color" id="selOC" value="#FFFFFF" style="width:22px;height:16px;border:1px solid var(--od);border-radius:2px;cursor:pointer;padding:0"><span style="font-size:9px;font-weight:700">幅:</span><input type="range" id="selOW" min="1" max="20" value="5" style="width:50px"><span id="selOWL" style="font-size:9px;font-weight:700">5</span></div><button class="mb sec" id="selCnBtn">閉じる</button></div></div>
+<div class="mo" id="paperMo"><div class="md"><h3>紙色</h3><div class="pcg"><div class="pco on" data-p="#FFFFFF" style="background:#FFFFFF"></div><div class="pco" data-p="#1a1a1a" style="background:#1a1a1a"></div><div class="pco" data-p="#FFF8E7" style="background:#FFF8E7"></div><div class="pco" data-p="#E8F5E9" style="background:#E8F5E9"></div><div class="pco" data-p="#E3F2FD" style="background:#E3F2FD"></div><div class="pco" data-p="#FCE4EC" style="background:#FCE4EC"></div><div class="pco" data-p="#F3E5F5" style="background:#F3E5F5"></div><div class="pco" data-p="#FFF3E0" style="background:#FFF3E0"></div><div class="pco" data-p="#ECEFF1" style="background:#ECEFF1"></div><div class="pco" data-p="#263238" style="background:#263238"></div></div><button class="mb sec" onclick="this.closest('.mo').classList.remove('show')">閉じる</button></div></div>
+<div class="mo" id="ratioMo"><div class="md"><h3>画面比率</h3><div class="rg"><div class="ro on" data-r="4:3" data-w="512" data-h="384"><div class="rv" style="width:44px;height:33px"></div><span>4:3</span></div><div class="ro" data-r="16:9" data-w="512" data-h="288"><div class="rv" style="width:44px;height:25px"></div><span>16:9</span></div><div class="ro" data-r="1:1" data-w="400" data-h="400"><div class="rv" style="width:33px;height:33px"></div><span>1:1</span></div><div class="ro" data-r="3:4" data-w="384" data-h="512"><div class="rv" style="width:27px;height:36px"></div><span>3:4</span></div><div class="ro" data-r="9:16" data-w="288" data-h="512"><div class="rv" style="width:20px;height:36px"></div><span>9:16</span></div></div><p style="color:#999;font-size:9px;margin-top:6px">※変更でデータクリア</p><button class="mb sec" onclick="this.closest('.mo').classList.remove('show')">閉じる</button></div></div>
+<div class="mo" id="ratioConfMo"><div class="md" style="width:240px"><h3>確認</h3><p style="font-size:11px;margin-bottom:10px">比率変更でデータクリア</p><button class="mb" id="ratioConfOk">変更</button><button class="mb sec" id="ratioConfNo">戻る</button></div></div>
+<div class="mo" id="txMo"><div class="md"><h3>テキスト入力</h3><input type="text" id="txIn" placeholder="テキスト..." style="width:100%;padding:7px;border:2px solid var(--o);border-radius:7px;font-size:15px;font-family:inherit;margin-bottom:5px"><div style="display:flex;gap:5px;align-items:center;justify-content:center;margin-bottom:4px"><span style="font-size:9px;font-weight:700">サイズ:</span><input type="range" id="txSz" min="12" max="80" value="28" style="width:90px"><span id="txSL" style="font-size:9px;font-weight:700">28px</span></div><div style="display:flex;gap:6px;justify-content:center;margin-bottom:4px"><label style="font-size:10px;font-weight:900;display:flex;align-items:center;gap:3px;background:#fff;border:2px solid var(--od);border-radius:6px;padding:4px 10px;cursor:pointer"><input type="checkbox" id="txOL" checked style="accent-color:var(--o)">袋文字</label></div><div id="txOLO" style="display:flex;gap:4px;align-items:center;justify-content:center;margin-bottom:4px;flex-wrap:wrap"><span style="font-size:9px;font-weight:700">縁色:</span><input type="color" id="txOC" value="#FFFFFF" style="width:26px;height:20px;border:2px solid var(--od);border-radius:3px;cursor:pointer;padding:0"><span style="font-size:9px;font-weight:700;margin-left:6px">縁幅:</span><input type="range" id="txOLW" min="1" max="16" value="5" style="width:60px"><span id="txOLWL" style="font-size:9px;font-weight:700">5px</span></div><button class="mb" id="txOk">配置</button><button class="mb sec" id="txCn">戻る</button></div></div>
+<div class="mo" id="audioMo"><div class="md"><h3>音声設定</h3><div class="ar"><button class="ab" id="recSyncBtn">再生+録音</button><label class="ab" style="cursor:pointer">BGM読込<input type="file" id="bgmFile" accept="audio/*" style="display:none"></label></div><div class="ar"><button class="ab" id="prevABtn" disabled>プレビュー</button><button class="ab" id="clrABtn">クリア</button></div><hr style="border:1px dashed var(--ol);margin:6px 0"><div class="ar"><select id="sfxSel" style="padding:3px;border-radius:5px;font-family:inherit;font-size:10px;font-weight:700;border:2px solid var(--od)"><option value="">なし</option><option value="click">カチッ</option><option value="pop">ポン</option><option value="swoosh">シュッ</option><option value="boing">ボヨン</option><option value="bell">チリン</option></select><button class="ab" id="asSfxBtn">割当</button></div><button class="mb sec" onclick="this.closest('.mo').classList.remove('show')" style="margin-top:8px">閉じる</button></div></div>
+<div class="mo" id="rotMo"><div class="md" style="width:240px"><h3>回転</h3><div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap"><button class="mb" data-rot="90">90°→</button><button class="mb" data-rot="-90">90°←</button><button class="mb" data-rot="180">180°</button></div><div style="margin-top:6px;display:flex;align-items:center;gap:4px;justify-content:center"><span style="font-size:9px;font-weight:700">任意:</span><input type="number" id="rotAng" value="45" style="width:50px;padding:3px;border:2px solid var(--od);border-radius:5px;font-size:11px;text-align:center"><button class="mb" id="rotCBtn">回転</button></div><button class="mb sec" onclick="this.closest('.mo').classList.remove('show')" style="margin-top:6px">閉じる</button></div></div>
+<div class="mo" id="expMo"><div class="md"><h3 id="expTi">出力中...</h3><div style="width:100%;height:6px;background:#eee;border-radius:3px;margin:8px 0;overflow:hidden"><div id="expBar" style="width:0%;height:100%;background:var(--o);border-radius:3px;transition:width .1s"></div></div><p id="expMsg" style="font-size:9px;color:#888"></p></div></div>
+<div class="mo" id="qualMo"><div class="md"><h3>出力設定</h3><p style="font-size:10px;margin-bottom:6px" id="qualLabel">GIF</p><div class="qs"><label class="on"><input type="radio" name="qual" value="low" checked>低画質</label><label><input type="radio" name="qual" value="mid">中画質</label><label><input type="radio" name="qual" value="high">高画質</label></div><p style="font-size:9px;color:#888;margin-bottom:6px"><span id="qualDur">0.0</span>秒 (<span id="qualFr">0</span>F)</p><button class="mb" id="qualOk">出力</button><button class="mb sec" onclick="this.closest('.mo').classList.remove('show')">戻る</button></div></div>
+<div class="mo" id="gotoMo"><div class="md" style="width:220px"><h3>フレーム指定</h3><div style="display:flex;align-items:center;gap:6px;justify-content:center;margin-bottom:8px"><input type="number" id="gotoNum" min="1" value="1" style="width:60px;padding:5px;border:2px solid var(--o);border-radius:7px;font-size:14px;font-family:inherit;text-align:center"><span style="font-size:11px;font-weight:700">/ <span id="gotoMax">1</span></span></div><button class="mb" id="gotoOk">移動</button><button class="mb sec" onclick="this.closest('.mo').classList.remove('show')">閉じる</button></div></div>
+<div class="mo" id="addMMo"><div class="md" style="width:220px"><h3>一括追加</h3><div style="display:flex;align-items:center;gap:6px;justify-content:center;margin-bottom:8px"><input type="number" id="addMNum" min="1" max="200" value="5" style="width:60px;padding:5px;border:2px solid var(--o);border-radius:7px;font-size:14px;font-family:inherit;text-align:center"><span style="font-size:11px;font-weight:700">フレーム</span></div><button class="mb" id="addMOk">追加</button><button class="mb sec" onclick="this.closest('.mo').classList.remove('show')">閉じる</button></div></div>
+<div class="mo" id="mergeMo"><div class="md" style="width:260px"><h3>レイヤー統合</h3><button class="mb" id="mergeDownBtn">下に統合</button><button class="mb" id="mergeAllBtn">全統合→A</button><button class="mb sec" onclick="this.closest('.mo').classList.remove('show')" style="margin-top:6px">閉じる</button></div></div>
+<div class="toast" id="toast"></div>
+<div class="save-ind" id="saveInd">💾 自動保存</div>
+
+<script>
+'use strict';
+// ===================== (A) UUID util =====================
+const uid = () => crypto.randomUUID ? crypto.randomUUID() : 'f'+Date.now()+Math.random().toString(36).slice(2,8);
+
+// ===================== (B) Worker with reqId routing =====================
+const workerCode = `'use strict';
+self.onmessage = function(e) {
+  const {type, reqId} = e.data;
+  if (type==='floodFill') doFill(e.data, reqId);
+  else if (type==='gifEncode') doGif(e.data, reqId);
+};
+function doFill(msg, reqId) {
+  const {w,h,sx,sy,fillR,fillG,fillB,tol} = msg;
+  const d = new Uint8ClampedArray(msg.data);
+  const x0=Math.floor(sx),y0=Math.floor(sy);
+  if(x0<0||x0>=w||y0<0||y0>=h){self.postMessage({type:'done',reqId,data:d.buffer},[d.buffer]);return}
+  const i0=(y0*w+x0)*4,tr=d[i0],tg=d[i0+1],tb=d[i0+2],ta=d[i0+3];
+  if(tr===fillR&&tg===fillG&&tb===fillB&&ta===255){self.postMessage({type:'done',reqId,data:d.buffer},[d.buffer]);return}
+  const m=i=>Math.abs(d[i]-tr)<=tol&&Math.abs(d[i+1]-tg)<=tol&&Math.abs(d[i+2]-tb)<=tol&&Math.abs(d[i+3]-ta)<=tol;
+  const vis=new Uint8Array(w*h), q=[y0*w+x0]; vis[y0*w+x0]=1;
+  while(q.length){const pi=q.pop(),px=pi%w,py=(pi/w)|0;
+    let lx=px;while(lx>0&&!vis[py*w+lx-1]&&m((py*w+lx-1)*4)){lx--;vis[py*w+lx]=1}
+    let rx=px;while(rx<w-1&&!vis[py*w+rx+1]&&m((py*w+rx+1)*4)){rx++;vis[py*w+rx]=1}
+    for(let x=lx;x<=rx;x++){const i=(py*w+x)*4;d[i]=fillR;d[i+1]=fillG;d[i+2]=fillB;d[i+3]=255;
+      for(const ny of[py-1,py+1])if(ny>=0&&ny<h){const ni=ny*w+x;if(!vis[ni]&&m(ni*4)){vis[ni]=1;q.push(ni)}}}}
+  self.postMessage({type:'done',reqId,data:d.buffer},[d.buffer]);
+}
+function doGif(msg, reqId) {
+  const {w,h,framesData,delay}=msg;
+  const cm=new Map,cols=[];
+  const ac=(r,g,b)=>{const k=(r<<16)|(g<<8)|b;if(!cm.has(k)&&cols.length<255){cm.set(k,cols.length);cols.push([r,g,b])}};
+  for(const fd of framesData){const d=new Uint8Array(fd);for(let i=0;i<d.length;i+=4)ac(d[i]&0xF8,d[i+1]&0xF8,d[i+2]&0xF8)}
+  while(cols.length<256)cols.push([0,0,0]);const ti=255;
+  const nr=(r,g,b,a)=>{if(a<128)return ti;r&=0xF8;g&=0xF8;b&=0xF8;const k=(r<<16)|(g<<8)|b;if(cm.has(k))return cm.get(k);let best=0,bd=1e9;for(let i=0;i<cols.length-1;i++){const dr=r-cols[i][0],dg=g-cols[i][1],db=b-cols[i][2],d2=dr*dr+dg*dg+db*db;if(d2<bd){bd=d2;best=i}}return best};
+  const buf=[];const wr=b=>buf.push(b),ws=s=>{for(let i=0;i<s.length;i++)wr(s.charCodeAt(i))},wsh=v=>{wr(v&0xFF);wr((v>>8)&0xFF)};
+  ws('GIF89a');wsh(w);wsh(h);wr(0xF7);wr(0);wr(0);for(let i=0;i<256;i++){wr(cols[i][0]);wr(cols[i][1]);wr(cols[i][2])}
+  wr(0x21);wr(0xFF);wr(11);ws('NETSCAPE2.0');wr(3);wr(1);wsh(0);wr(0);
+  for(let fi=0;fi<framesData.length;fi++){
+    const d=new Uint8Array(framesData[fi]);wr(0x21);wr(0xF9);wr(4);wr(0x09);wsh(Math.round(delay/10));wr(ti);wr(0);
+    wr(0x2C);wsh(0);wsh(0);wsh(w);wsh(h);wr(0);wr(8);
+    const px=new Uint8Array(w*h);for(let i=0;i<w*h;i++){const j=i*4;px[i]=nr(d[j],d[j+1],d[j+2],d[j+3])}
+    const sb=lzw(8,px);for(const b of sb){wr(b.length);for(const x of b)wr(x)}wr(0);
+    self.postMessage({type:'progress',reqId,frame:fi+1,total:framesData.length});
+  }
+  wr(0x3B);const r=new Uint8Array(buf);self.postMessage({type:'done',reqId,data:r.buffer},[r.buffer]);
+}
+function lzw(mcs,px){const cc=1<<mcs,ei=cc+1;let cs=mcs+1,nc=ei+1;const tb=new Map;
+  const rst=()=>{tb.clear();for(let i=0;i<cc;i++)tb.set(String(i),i);nc=ei+1;cs=mcs+1};
+  const out=[];let bb=0,bc=0;
+  const em=c=>{bb|=(c<<bc);bc+=cs;while(bc>=8){out.push(bb&0xFF);bb>>=8;bc-=8}};
+  rst();em(cc);let cur=String(px[0]);
+  for(let i=1;i<px.length;i++){const nx=String(px[i]),cb=cur+','+nx;if(tb.has(cb))cur=cb;else{em(tb.get(cur));if(nc<=4095){tb.set(cb,nc++);if(nc>(1<<cs)&&cs<12)cs++}else{em(cc);rst()}cur=nx}}
+  em(tb.get(cur));em(ei);if(bc>0)out.push(bb&0xFF);
+  const blocks=[];for(let i=0;i<out.length;i+=255)blocks.push(out.slice(i,i+255));return blocks}`;
+
+let W;
+const wCbs = new Map(); // reqId -> {resolve, onProgress}
+let wReqId = 0;
+try { const b=new Blob([workerCode],{type:'application/javascript'}); W=new Worker(URL.createObjectURL(b));
+  W.onmessage = e => { const d=e.data, cb=wCbs.get(d.reqId); if(!cb)return;
+    if(d.type==='progress'){if(cb.onProgress)cb.onProgress(d)} else {wCbs.delete(d.reqId);cb.resolve(d)} };
+} catch(e){W=null}
+function wCall(msg, transfers, onProgress) {
+  return new Promise(resolve => { const r=++wReqId; wCbs.set(r,{resolve,onProgress}); msg.reqId=r; W.postMessage(msg, transfers||[]); });
+}
+
+// ===================== IndexedDB =====================
+const DB = {
+  db:null, NAME:'UgomemoV2', VER:1, SF:'frames', SM:'meta',
+  async open() {
+    return new Promise((res,rej) => {
+      const r=indexedDB.open(this.NAME,this.VER);
+      r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains(this.SF))d.createObjectStore(this.SF);if(!d.objectStoreNames.contains(this.SM))d.createObjectStore(this.SM)};
+      r.onsuccess=()=>{this.db=r.result;res()};r.onerror=()=>rej(r.error);
+    });
+  },
+  async put(s,k,v){if(!this.db)return;return new Promise((res,rej)=>{const t=this.db.transaction(s,'readwrite');t.objectStore(s).put(v,k);t.oncomplete=res;t.onerror=()=>rej(t.error)})},
+  async get(s,k){if(!this.db)return null;return new Promise((res,rej)=>{const t=this.db.transaction(s,'readonly');const r=t.objectStore(s).get(k);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})},
+  async del(s,k){if(!this.db)return;return new Promise((res,rej)=>{const t=this.db.transaction(s,'readwrite');t.objectStore(s).delete(k);t.oncomplete=res;t.onerror=()=>rej(t.error)})},
+  async clear(s){if(!this.db)return;return new Promise((res,rej)=>{const t=this.db.transaction(s,'readwrite');t.objectStore(s).clear();t.oncomplete=res;t.onerror=()=>rej(t.error)})},
+  // (D) PNG compression via OffscreenCanvas or canvas.toBlob
+  async compressLayer(imgData) {
+    if(!imgData)return null;
+    try {
+      if(typeof OffscreenCanvas!=='undefined'){const oc=new OffscreenCanvas(imgData.width,imgData.height);oc.getContext('2d').putImageData(imgData,0,0);return await oc.convertToBlob({type:'image/png'})}
+      const c=document.createElement('canvas');c.width=imgData.width;c.height=imgData.height;c.getContext('2d').putImageData(imgData,0,0);
+      return new Promise(r=>c.toBlob(r,'image/png'));
+    } catch(e){return new Blob([imgData.data.buffer])} // fallback raw
+  },
+  async decompressLayer(blob, w, h) {
+    if(!blob)return null;
+    try {
+      const bmp=await createImageBitmap(blob);const c=document.createElement('canvas');c.width=w;c.height=h;
+      const x=c.getContext('2d');x.drawImage(bmp,0,0);if(bmp.close)bmp.close();return x.getImageData(0,0,w,h);
+    } catch(e){const ab=await blob.arrayBuffer();return new ImageData(new Uint8ClampedArray(ab),w,h)}
+  },
+  // (A) Key by UUID: `${frameId}_${layer}`
+  async saveLayer(fid, layer, imgData){
+    const blob=await this.compressLayer(imgData);
+    if(blob) await this.put(this.SF, fid+'_'+layer, blob);
+    else await this.del(this.SF, fid+'_'+layer);
+  },
+  async loadLayer(fid, layer, w, h){
+    const blob=await this.get(this.SF, fid+'_'+layer);
+    return blob ? this.decompressLayer(blob,w,h) : null;
+  },
+  async deleteFrame(fid){for(const l of['A','B','C','P'])await this.del(this.SF,fid+'_'+l)},
+  async saveMeta(m){await this.put(this.SM,'project',m)},
+  async loadMeta(){return this.get(this.SM,'project')}
+};
+
+// ===================== SFX =====================
+const SFX={_c:null,ctx(){if(!this._c)this._c=new(window.AudioContext||window.webkitAudioContext)();return this._c},
+  play(t){const c=this.ctx(),n=c.currentTime,o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);
+    const D={click:[800,.05,'square'],pop:[600,.15,'sine'],swoosh:[1200,.2,'sawtooth'],boing:[200,.3,'sine'],bell:[1047,.5,'sine']};
+    if(!D[t])return;o.type=D[t][2];o.frequency.value=D[t][0];g.gain.setValueAtTime(.3,n);g.gain.exponentialRampToValueAtTime(.001,n+D[t][1]);o.start(n);o.stop(n+D[t][1])}};
+
+// ===================== State =====================
+const $=id=>document.getElementById(id);
+let CW=512,CH=384,layerOrder=['C','B','A'];
+const TW=112,TH=84;
+
+// (A) frames[] stores metadata with stable UUID
+// frameCache: Map<uuid, {A:ImageData|null,...}>
+const S={
+  frames:[], // [{id:uuid, sfx:'', thumbDirty:bool}]
+  fc:new Map(), // frameCache uuid -> {A,B,C,P}
+  dirtyIds:new Set(), // (E) UUIDs that need IDB write (only set after actual edits)
+  dirtyLayers:new Map(), // uuid -> Set<layer> for precise tracking
+  cf:0, cl:'A', ct:'pen', cc:'#111111', cs:4, alpha:1, pc:'#FFFFFF',
+  zoom:1, panX:0, panY:0, drawing:false, panning:false, playing:false, onion:false, fps:8,
+  lx:0, ly:0, sx:0, sy:0, sel:null, clip:null, frClip:null,
+  txX:0, txY:0, txFs:28,
+  undoStack:[], redoStack:[], maxUndo:50,
+  bgmBuf:null, ratio:'4:3', lassoPath:[],
+  penOut:false, penOutC:'#FFFFFF', penOutW:3,
+  pts:[], eSnap:null, img:null
+};
+const thumbs=new Map(); // uuid -> canvas
+
+const cvs={bg:$('bgC'),photo:$('lPhoto'),C:$('lC'),B:$('lB'),A:$('lA'),on:$('onC'),dr:$('drC'),fl:$('floatC'),st:$('strokeC')};
+const cx={};
+function curFr(){return S.frames[S.cf]}
+function curId(){return S.frames[S.cf]?.id}
+function curC(){return S.cl==='Photo'?cvs.photo:cvs[S.cl]}
+function curX(){return S.cl==='Photo'?cx.photo:cx[S.cl]}
+
+// ===================== Canvas Init =====================
+function initCanvas(){
+  $('cw').style.width=CW+'px';$('cw').style.height=CH+'px';
+  Object.keys(cvs).forEach(k=>{cvs[k].width=CW;cvs[k].height=CH;cx[k]=cvs[k].getContext('2d',{willReadFrequently:k==='A'||k==='B'||k==='C'||k==='photo'})});
+  $('selPath').setAttribute('viewBox',`0 0 ${CW} ${CH}`);updZO();fitView();
+}
+function updZO(){cvs.photo.style.zIndex=2;layerOrder.forEach((l,i)=>{cvs[l].style.zIndex=3+i})}
+function fitView(){const v=$('vp'),aw=v.clientWidth-16,ah=v.clientHeight-16;S.zoom=Math.min(aw/CW,ah/CH,2);S.panX=0;S.panY=0;updT()}
+function updT(){$('cw').style.transform=`translate(${S.panX}px,${S.panY}px) scale(${S.zoom})`;$('zDisp').textContent=Math.round(S.zoom*100)+'%'}
+function s2c(ex,ey){const r=$('cw').getBoundingClientRect();return{x:(ex-r.left)*(CW/r.width),y:(ey-r.top)*(CH/r.height)}}
+function updPC(){cx.bg.fillStyle=S.pc;cx.bg.fillRect(0,0,CW,CH)}
+
+// ===================== Frame Cache Ops =====================
+function mkFrame(){return{id:uid(),sfx:'',thumbDirty:true}}
+function getCache(fid){if(!S.fc.has(fid))S.fc.set(fid,{A:null,B:null,C:null,P:null});return S.fc.get(fid)}
+
+// Snapshot canvases → cache. Does NOT set thumbDirty (only afterEdit does).
+function snapToCache(){
+  const c=getCache(curId());
+  ['A','B','C'].forEach(l=>{c[l]=cx[l].getImageData(0,0,CW,CH)});
+  c.P=cx.photo.getImageData(0,0,CW,CH);
+}
+
+// (E) Only mark dirty after real edits
+function markDirty(fid, layer){
+  S.dirtyIds.add(fid);
+  if(!S.dirtyLayers.has(fid))S.dirtyLayers.set(fid,new Set());
+  S.dirtyLayers.get(fid).add(layer);
+  debounceSave();
+}
+function markAllDirtyForFrame(fid){['A','B','C','P'].forEach(l=>markDirty(fid,l))}
+
+// Load cache → canvases
+function cacheToCanvas(fid){
+  const c=S.fc.get(fid);
+  [['A','A'],['B','B'],['C','C'],['P','photo']].forEach(([k,cv])=>{cx[cv].clearRect(0,0,CW,CH);if(c&&c[k])cx[cv].putImageData(c[k],0,0)});
+  updOn();$('curF').textContent=S.cf+1;
+}
+
+// Load from IDB if not in cache
+async function ensureCached(fid){
+  if(S.fc.has(fid))return S.fc.get(fid);
+  const c={A:null,B:null,C:null,P:null};
+  for(const l of['A','B','C','P']){try{c[l]=await DB.loadLayer(fid,l,CW,CH)}catch(e){}}
+  S.fc.set(fid,c);return c;
+}
+
+// Evict: only non-dirty frames far from current (±10 kept)
+function evictFar(){
+  const keepIds=new Set();
+  for(let i=Math.max(0,S.cf-10);i<=Math.min(S.frames.length-1,S.cf+10);i++)keepIds.add(S.frames[i].id);
+  for(const[fid] of S.fc){if(!keepIds.has(fid)&&!S.dirtyIds.has(fid)){S.fc.delete(fid)}}
+}
+
+// Preload ±18 frames async, then re-render their thumbs
+let _plT=null;
+function schedulePreload(){if(_plT)return;_plT=setTimeout(()=>{_plT=null;preloadNearby()},80)}
+async function preloadNearby(){
+  const lo=Math.max(0,S.cf-18),hi=Math.min(S.frames.length-1,S.cf+18);
+  let anyNew=false;
+  for(let i=lo;i<=hi;i++){
+    const fid=S.frames[i].id;
+    if(!S.fc.has(fid)){await ensureCached(fid);anyNew=true;
+      // Render thumb now that cache is available
+      const fm=S.frames[i];let tc=thumbs.get(fm.id);
+      if(!tc){tc=document.createElement('canvas');tc.width=TW;tc.height=TH;thumbs.set(fm.id,tc)}
+      if(fm.thumbDirty||!tc._rendered){renderThumb(fm.id,tc,false);fm.thumbDirty=false;tc._rendered=true;
+        // Update DOM thumb if visible
+        const el=$('tls');if(el&&el.children[i]){const dc=el.children[i].querySelector('canvas');if(dc)dc.getContext('2d').drawImage(tc,0,0)}}
+    }
+  }
+}
+
+// ===================== IDB Persistence =====================
+let _saveT=null;
+function debounceSave(){if(_saveT)return;_saveT=setTimeout(async()=>{_saveT=null;await flushIDB()},2500)}
+async function flushIDB(){
+  if(!DB.db||!S.dirtyIds.size)return;
+  const ids=new Set(S.dirtyIds);S.dirtyIds.clear();
+  const layers=new Map(S.dirtyLayers);S.dirtyLayers.clear();
+  for(const fid of ids){
+    const c=S.fc.get(fid);if(!c)continue;
+    const ls=layers.get(fid)||new Set(['A','B','C','P']);
+    for(const l of ls){try{await DB.saveLayer(fid,l,c[l])}catch(e){}}
+  }
+  try{await DB.saveMeta({w:CW,h:CH,pc:S.pc,fps:S.fps,ratio:S.ratio,cf:S.cf,lo:layerOrder,
+    frames:S.frames.map(f=>({id:f.id,sfx:f.sfx}))})}catch(e){}
+  const si=$('saveInd');si.classList.add('show');clearTimeout(si._t);si._t=setTimeout(()=>si.classList.remove('show'),1200);
+}
+
+// ===================== Frame Navigation =====================
+async function swF(i){
+  if(S.playing||i<0||i>=S.frames.length)return;
+  // Save current frame and render its thumb BEFORE switching
+  snapToCache();
+  const oldId=curId();let otc=thumbs.get(oldId);
+  if(!otc){otc=document.createElement('canvas');otc.width=TW;otc.height=TH;thumbs.set(oldId,otc)}
+  renderThumb(oldId,otc,true);curFr().thumbDirty=false;otc._rendered=true;
+  S.cf=i;
+  await ensureCached(curId());
+  cacheToCanvas(curId());
+  evictFar();renderTL();
+}
+function addF(){
+  snapToCache();
+  // Render thumb for current frame before we leave it
+  const oldId=curId();let otc=thumbs.get(oldId);
+  if(!otc){otc=document.createElement('canvas');otc.width=TW;otc.height=TH;thumbs.set(oldId,otc)}
+  renderThumb(oldId,otc,true);curFr().thumbDirty=false;otc._rendered=true;
+  const nf=mkFrame();
+  const nc={A:null,B:null,C:null,P:null};
+  const oc=S.fc.get(curId());
+  if(oc&&oc.P)nc.P=new ImageData(new Uint8ClampedArray(oc.P.data),CW,CH);
+  S.frames.splice(S.cf+1,0,nf);
+  S.fc.set(nf.id,nc);S.cf++;
+  ['A','B','C'].forEach(l=>cx[l].clearRect(0,0,CW,CH));
+  if(nc.P)cx.photo.putImageData(nc.P,0,0);else cx.photo.clearRect(0,0,CW,CH);
+  updOn();markAllDirtyForFrame(nf.id);renderTL();toast('フレーム追加');
+}
+function delF(){
+  if(S.frames.length<=1){['A','B','C','photo'].forEach(k=>cx[k].clearRect(0,0,CW,CH));
+    const fid=curId();S.fc.set(fid,{A:null,B:null,C:null,P:null});snapToCache();markAllDirtyForFrame(fid);renderTL();return}
+  const old=curFr();DB.deleteFrame(old.id).catch(()=>{});S.fc.delete(old.id);thumbs.delete(old.id);
+  S.frames.splice(S.cf,1);if(S.cf>=S.frames.length)S.cf--;
+  ensureCached(curId()).then(()=>cacheToCanvas(curId()));renderTL();
+}
+
+// ===================== Undo/Redo (diff-based) =====================
+let _uSnap=null;
+function pU(){_uSnap=curX().getImageData(0,0,CW,CH)}
+function commitUndo(){
+  if(!_uSnap)return;const after=curX().getImageData(0,0,CW,CH);
+  let minX=CW,minY=CH,maxX=-1,maxY=-1;const od=_uSnap.data,nd=after.data;
+  for(let y=0;y<CH;y++)for(let x=0;x<CW;x++){const i=(y*CW+x)*4;
+    if(od[i]!==nd[i]||od[i+1]!==nd[i+1]||od[i+2]!==nd[i+2]||od[i+3]!==nd[i+3]){if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y}}
+  _uSnap=null;if(maxX<0)return;
+  const dw=maxX-minX+1,dh=maxY-minY+1,op=new Uint8ClampedArray(dw*dh*4),np=new Uint8ClampedArray(dw*dh*4);
+  for(let y=0;y<dh;y++)for(let x=0;x<dw;x++){const si=((minY+y)*CW+(minX+x))*4,di=(y*dw+x)*4;
+    op[di]=od[si];op[di+1]=od[si+1];op[di+2]=od[si+2];op[di+3]=od[si+3];
+    np[di]=nd[si];np[di+1]=nd[si+1];np[di+2]=nd[si+2];np[di+3]=nd[si+3]}
+  S.undoStack.push({fid:curId(),l:S.cl,x:minX,y:minY,w:dw,h:dh,op,np});
+  if(S.undoStack.length>S.maxUndo)S.undoStack.shift();S.redoStack=[];
+}
+function applyPatch(entry, patch){
+  const c=entry.l==='Photo'?cx.photo:cx[entry.l];
+  // Only apply if we're on the same frame
+  if(entry.fid!==curId())return;
+  const cur=c.getImageData(0,0,CW,CH),cd=cur.data;
+  for(let y=0;y<entry.h;y++)for(let x=0;x<entry.w;x++){const si=(y*entry.w+x)*4,di=((entry.y+y)*CW+(entry.x+x))*4;
+    cd[di]=patch[si];cd[di+1]=patch[si+1];cd[di+2]=patch[si+2];cd[di+3]=patch[si+3]}
+  c.putImageData(cur,0,0);
+}
+function undo(){if(!S.undoStack.length)return;const e=S.undoStack.pop();
+  S.redoStack.push({...e,op:e.np,np:e.op});applyPatch(e,e.op);snapToCache();markDirty(e.fid,e.l);curFr().thumbDirty=true;renderTLDebounced()}
+function redo(){if(!S.redoStack.length)return;const e=S.redoStack.pop();
+  S.undoStack.push({...e,op:e.np,np:e.op});applyPatch(e,e.op);snapToCache();markDirty(e.fid,e.l);curFr().thumbDirty=true;renderTLDebounced()}
+
+// helper: after edit, snap+dirty+thumb
+function afterEdit(layer){snapToCache();markDirty(curId(),layer||S.cl);curFr().thumbDirty=true;renderTLDebounced()}
+
+// ===================== Drawing =====================
+function drawPen(){const c=cx.st;c.clearRect(0,0,CW,CH);const p=S.pts;if(!p.length)return;c.lineCap='round';c.lineJoin='round';
+  if(S.penOut){c.strokeStyle=S.penOutC;c.lineWidth=S.cs+S.penOutW*2;c.beginPath();c.moveTo(p[0].x,p[0].y);for(let i=1;i<p.length;i++)c.lineTo(p[i].x,p[i].y);if(p.length===1)c.lineTo(p[0].x+.1,p[0].y);c.stroke()}
+  c.strokeStyle=S.cc;c.lineWidth=S.cs;c.beginPath();c.moveTo(p[0].x,p[0].y);for(let i=1;i<p.length;i++)c.lineTo(p[i].x,p[i].y);if(p.length===1)c.lineTo(p[0].x+.1,p[0].y);c.stroke()}
+function commitPen(){curX().globalAlpha=S.alpha;curX().drawImage(cvs.st,0,0);curX().globalAlpha=1;cx.st.clearRect(0,0,CW,CH);cvs.st.style.opacity=1}
+function applyEraser(){const c=curX(),p=S.pts;if(!p.length||!S.eSnap)return;c.putImageData(S.eSnap,0,0);
+  c.globalCompositeOperation='destination-out';c.globalAlpha=S.alpha;c.lineCap='round';c.lineJoin='round';c.lineWidth=S.cs*2;
+  c.beginPath();c.moveTo(p[0].x,p[0].y);for(let i=1;i<p.length;i++)c.lineTo(p[i].x,p[i].y);if(p.length===1)c.lineTo(p[0].x+.1,p[0].y);c.stroke();c.globalCompositeOperation='source-over';c.globalAlpha=1}
+
+// Flood fill via worker
+function floodFill(sx,sy){
+  const c=curX(),id=c.getImageData(0,0,CW,CH);
+  const tc2=document.createElement('canvas').getContext('2d');tc2.fillStyle=S.cc;tc2.fillRect(0,0,1,1);const fc=tc2.getImageData(0,0,1,1).data;
+  if(W){
+    wCall({type:'floodFill',w:CW,h:CH,data:id.data.buffer,sx,sy,fillR:fc[0],fillG:fc[1],fillB:fc[2],tol:30},[id.data.buffer])
+    .then(d=>{c.putImageData(new ImageData(new Uint8ClampedArray(d.data),CW,CH),0,0);commitUndo();afterEdit()});
+  } else {
+    // fallback sync
+    const d=id.data,x0=Math.floor(sx),y0=Math.floor(sy);
+    if(x0<0||x0>=CW||y0<0||y0>=CH)return;
+    const i0=(y0*CW+x0)*4,tr=d[i0],tg=d[i0+1],tb=d[i0+2],ta=d[i0+3];
+    if(tr===fc[0]&&tg===fc[1]&&tb===fc[2]&&ta===255){commitUndo();return}
+    const tol=30,m=i=>Math.abs(d[i]-tr)<=tol&&Math.abs(d[i+1]-tg)<=tol&&Math.abs(d[i+2]-tb)<=tol&&Math.abs(d[i+3]-ta)<=tol;
+    const vis=new Uint8Array(CW*CH),q=[y0*CW+x0];vis[y0*CW+x0]=1;
+    while(q.length){const pi=q.pop(),px=pi%CW,py=(pi/CW)|0;let lx=px;while(lx>0&&!vis[py*CW+lx-1]&&m((py*CW+lx-1)*4)){lx--;vis[py*CW+lx]=1}
+      let rx=px;while(rx<CW-1&&!vis[py*CW+rx+1]&&m((py*CW+rx+1)*4)){rx++;vis[py*CW+rx]=1}
+      for(let x=lx;x<=rx;x++){const i=(py*CW+x)*4;d[i]=fc[0];d[i+1]=fc[1];d[i+2]=fc[2];d[i+3]=255;
+        for(const ny of[py-1,py+1])if(ny>=0&&ny<CH){const ni=ny*CW+x;if(!vis[ni]&&m(ni*4)){vis[ni]=1;q.push(ni)}}}}
+    c.putImageData(id,0,0);commitUndo();afterEdit();
+  }
+}
+
+// ===================== Image Placement =====================
+function startImgPlace(imgEl){const a=imgEl.width/imgEl.height,ca=CW/CH;let bw,bh;if(a>ca){bw=CW;bh=CW/a}else{bh=CH;bw=CH*a}
+  S.img={el:imgEl,x:CW/2,y:CH/2,bw,bh,sc:1};$('imgHud').classList.add('show');drawImgPrev()}
+function drawImgPrev(){if(!S.img)return;cx.fl.clearRect(0,0,CW,CH);const{el,x,y,bw,bh,sc}=S.img;const dw=bw*sc,dh=bh*sc;
+  cx.fl.globalAlpha=.85;cx.fl.drawImage(el,x-dw/2,y-dh/2,dw,dh);cx.fl.globalAlpha=1;
+  cx.fl.strokeStyle='#FF6600';cx.fl.lineWidth=2;cx.fl.setLineDash([6,4]);cx.fl.strokeRect(x-dw/2,y-dh/2,dw,dh);cx.fl.setLineDash([])}
+function commitImg(){if(!S.img)return;pU();const{el,x,y,bw,bh,sc}=S.img;curX().drawImage(el,x-bw*sc/2,y-bh*sc/2,bw*sc,bh*sc);
+  cx.fl.clearRect(0,0,CW,CH);S.img=null;$('imgHud').classList.remove('show');commitUndo();afterEdit();toast('画像配置完了')}
+function cancelImg(){cx.fl.clearRect(0,0,CW,CH);S.img=null;$('imgHud').classList.remove('show')}
+$('imgOk').onclick=commitImg;$('imgCn').onclick=cancelImg;
+
+// ===================== (C) Pointer Events Only =====================
+const vp=$('vp');
+const ptrs=new Map(); // pointerId -> {x,y}
+let pinch=null, drawPtrId=null, imgDrag=false;
+
+function getPinchInfo(){
+  const vs=[...ptrs.values()];if(vs.length<2)return null;
+  return{dist:Math.hypot(vs[0].x-vs[1].x,vs[0].y-vs[1].y),mx:(vs[0].x+vs[1].x)/2,my:(vs[0].y+vs[1].y)/2};
+}
+function cancelDraw(){
+  if(S.drawing){S.drawing=false;S.pts=[];cx.st.clearRect(0,0,CW,CH);cx.dr.clearRect(0,0,CW,CH);S.eSnap=null;_uSnap=null}
+  drawPtrId=null;
+}
+
+vp.addEventListener('pointerdown',e=>{
+  if(S.playing)return;
+  e.preventDefault();
+  vp.setPointerCapture(e.pointerId);
+  ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+
+  if(ptrs.size>=2){
+    cancelDraw();imgDrag=false;
+    const pi=getPinchInfo();
+    if(S.img)pinch={mode:'img',dist0:pi.dist,sc0:S.img.sc,mx0:pi.mx,my0:pi.my,ix0:S.img.x,iy0:S.img.y};
+    else pinch={mode:'canvas',dist0:pi.dist,zoom0:S.zoom,px0:S.panX,py0:S.panY,mx0:pi.mx,my0:pi.my};
+    return;
+  }
+  // Single pointer
+  drawPtrId=e.pointerId;
+  const pt=s2c(e.clientX,e.clientY);
+  if(S.img){imgDrag=true;S.lx=pt.x;S.ly=pt.y;return}
+  S.lx=pt.x;S.ly=pt.y;S.sx=pt.x;S.sy=pt.y;
+  if(e.button===1||S.ct==='hand'){S.panning=true;S.lx=e.clientX;S.ly=e.clientY;return}
+  if(S.ct==='paste'){pasteAt(pt.x,pt.y);return}
+  if(S.ct==='fill'){pU();floodFill(pt.x,pt.y);return}
+  if(S.ct==='text'){S.txX=pt.x;S.txY=pt.y;$('txMo').classList.add('show');$('txIn').focus();return}
+  S.drawing=true;
+  if(S.ct==='pen'){pU();S.pts=[pt];drawPen();cvs.st.style.opacity=S.alpha}
+  else if(S.ct==='eraser'){pU();S.eSnap=curX().getImageData(0,0,CW,CH);S.pts=[pt];applyEraser()}
+  else if(S.ct==='select'){S.sel={x:pt.x,y:pt.y,w:0,h:0}}
+  else if(S.ct==='lasso'){S.lassoPath=[pt];$('lassoPath').setAttribute('d',`M${pt.x},${pt.y}`)}
+  else if(S.ct==='line'||S.ct==='rect'||S.ct==='circle'){pU();cx.dr.clearRect(0,0,CW,CH)}
+});
+
+vp.addEventListener('pointermove',e=>{
+  if(!ptrs.has(e.pointerId))return;
+  ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+
+  // Pinch
+  if(ptrs.size>=2&&pinch){
+    e.preventDefault();const pi=getPinchInfo();if(!pi)return;
+    if(pinch.mode==='img'&&S.img){
+      S.img.sc=Math.max(.05,Math.min(5,pinch.sc0*(pi.dist/pinch.dist0)));
+      const r=$('cw').getBoundingClientRect();
+      S.img.x=pinch.ix0+(pi.mx-pinch.mx0)*(CW/r.width);S.img.y=pinch.iy0+(pi.my-pinch.my0)*(CH/r.height);
+      drawImgPrev();
+    } else if(pinch.mode==='canvas'){
+      S.zoom=Math.max(.1,Math.min(8,pinch.zoom0*(pi.dist/pinch.dist0)));
+      S.panX=pinch.px0+(pi.mx-pinch.mx0);S.panY=pinch.py0+(pi.my-pinch.my0);updT();
+    }
+    return;
+  }
+  if(e.pointerId!==drawPtrId)return;
+
+  if(S.img&&imgDrag){const pt=s2c(e.clientX,e.clientY);S.img.x+=pt.x-S.lx;S.img.y+=pt.y-S.ly;S.lx=pt.x;S.ly=pt.y;drawImgPrev();return}
+  if(S.panning){S.panX+=e.clientX-S.lx;S.panY+=e.clientY-S.ly;S.lx=e.clientX;S.ly=e.clientY;updT();return}
+  const pt=s2c(e.clientX,e.clientY);
+  if(S.ct==='paste'&&S.clip){cx.fl.clearRect(0,0,CW,CH);cx.fl.globalAlpha=.5;cx.fl.drawImage(S.clip,pt.x-S.clip.width/2,pt.y-S.clip.height/2);cx.fl.globalAlpha=1;return}
+  if(!S.drawing)return;
+  if(S.ct==='pen'){S.pts.push(pt);drawPen()}
+  else if(S.ct==='eraser'){S.pts.push(pt);applyEraser()}
+  else if(S.ct==='line'||S.ct==='rect'||S.ct==='circle'){
+    const dc=cx.dr;dc.clearRect(0,0,CW,CH);dc.lineCap='round';dc.lineJoin='round';dc.globalAlpha=S.alpha;
+    if(S.ct==='line'){if(S.penOut){dc.strokeStyle=S.penOutC;dc.lineWidth=S.cs+S.penOutW*2;dc.beginPath();dc.moveTo(S.sx,S.sy);dc.lineTo(pt.x,pt.y);dc.stroke()}dc.strokeStyle=S.cc;dc.lineWidth=S.cs;dc.beginPath();dc.moveTo(S.sx,S.sy);dc.lineTo(pt.x,pt.y);dc.stroke()}
+    else if(S.ct==='rect'){dc.strokeStyle=S.cc;dc.lineWidth=S.cs;dc.beginPath();dc.rect(S.sx,S.sy,pt.x-S.sx,pt.y-S.sy);dc.stroke()}
+    else{dc.strokeStyle=S.cc;dc.lineWidth=S.cs;const rx=Math.abs(pt.x-S.sx)/2,ry=Math.abs(pt.y-S.sy)/2;dc.beginPath();dc.ellipse((S.sx+pt.x)/2,(S.sy+pt.y)/2,Math.max(rx,1),Math.max(ry,1),0,0,Math.PI*2);dc.stroke()}
+    dc.globalAlpha=1;
+  }
+  else if(S.ct==='select'&&S.sel){S.sel.w=pt.x-S.sel.x;S.sel.h=pt.y-S.sel.y;const sb=$('selBox');sb.style.display='block';
+    const x=Math.min(S.sel.x,S.sel.x+S.sel.w),y=Math.min(S.sel.y,S.sel.y+S.sel.h);sb.style.left=(x/CW*100)+'%';sb.style.top=(y/CH*100)+'%';sb.style.width=(Math.abs(S.sel.w)/CW*100)+'%';sb.style.height=(Math.abs(S.sel.h)/CH*100)+'%'}
+  else if(S.ct==='lasso'){S.lassoPath.push(pt);let d='M'+S.lassoPath[0].x+','+S.lassoPath[0].y;for(let i=1;i<S.lassoPath.length;i++)d+='L'+S.lassoPath[i].x+','+S.lassoPath[i].y;$('lassoPath').setAttribute('d',d)}
+});
+
+function handlePointerUp(e){
+  ptrs.delete(e.pointerId);
+  if(ptrs.size<2)pinch=null;
+  if(e.pointerId!==drawPtrId)return;
+  drawPtrId=null;
+  if(imgDrag){imgDrag=false;return}
+  if(S.panning){S.panning=false;return}
+  if(!S.drawing)return;S.drawing=false;
+  if(S.ct==='pen'){commitPen();S.pts=[];commitUndo();afterEdit()}
+  else if(S.ct==='eraser'){S.eSnap=null;S.pts=[];commitUndo();afterEdit()}
+  else if(S.ct==='line'||S.ct==='rect'||S.ct==='circle'){curX().drawImage(cvs.dr,0,0);cx.dr.clearRect(0,0,CW,CH);commitUndo();afterEdit()}
+  else if(S.ct==='select'&&S.sel){if(S.sel.w<0){S.sel.x+=S.sel.w;S.sel.w*=-1}if(S.sel.h<0){S.sel.y+=S.sel.h;S.sel.h*=-1}if(S.sel.w>2&&S.sel.h>2)$('selMo').classList.add('show');else{S.sel=null;$('selBox').style.display='none'}return}
+  else if(S.ct==='lasso'&&S.lassoPath.length>4){const pts=S.lassoPath,mnx=Math.max(0,Math.floor(Math.min(...pts.map(p=>p.x)))),mny=Math.max(0,Math.floor(Math.min(...pts.map(p=>p.y)))),mxx=Math.min(CW,Math.ceil(Math.max(...pts.map(p=>p.x)))),mxy=Math.min(CH,Math.ceil(Math.max(...pts.map(p=>p.y))));if(mxx-mnx>2&&mxy-mny>2){S.sel={x:mnx,y:mny,w:mxx-mnx,h:mxy-mny,lasso:pts};$('selMo').classList.add('show')}else{$('lassoPath').setAttribute('d','');S.lassoPath=[]}return}
+  curX().globalCompositeOperation='source-over';curX().globalAlpha=1;
+}
+vp.addEventListener('pointerup',handlePointerUp);
+vp.addEventListener('pointercancel',e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch=null;if(e.pointerId===drawPtrId){cancelDraw()}});
+
+vp.addEventListener('wheel',e=>{e.preventDefault();if(S.img){S.img.sc=Math.max(.05,Math.min(5,S.img.sc*(e.deltaY>0?.92:1.08)));drawImgPrev()}else{S.zoom*=e.deltaY>0?.9:1.1;S.zoom=Math.max(.1,Math.min(8,S.zoom));updT()}},{passive:false});
+vp.addEventListener('dblclick',()=>{if(S.img)commitImg()});
+vp.addEventListener('contextmenu',e=>{e.preventDefault();const cm=$('ctxMenu');cm.style.left=Math.min(e.clientX,innerWidth-150)+'px';cm.style.top=Math.min(e.clientY,innerHeight-120)+'px';cm.classList.add('show')});
+document.addEventListener('click',e=>{if(!e.target.closest('.ctx'))$('ctxMenu').classList.remove('show')});
+document.querySelectorAll('[data-ctx]').forEach(it=>{it.onclick=()=>{$('ctxMenu').classList.remove('show');const a=it.dataset.ctx;
+  if(a==='undo')undo();else if(a==='redo')redo();else if(a==='paste'&&S.clip){S.ct='paste';document.querySelectorAll('[data-tool]').forEach(b=>b.classList.remove('on'));toast('ペーストモード')}
+  else if(a==='clear'){pU();curX().clearRect(0,0,CW,CH);commitUndo();afterEdit();toast('クリア')}}});
+
+// ===================== Selection =====================
+function selAction(mode){$('selMo').classList.remove('show');$('selBox').style.display='none';$('lassoPath').setAttribute('d','');if(!S.sel)return;const c=curX(),hl=S.sel.lasso;
+  if(mode==='copy'){const tmp=document.createElement('canvas');tmp.width=S.sel.w;tmp.height=S.sel.h;const tc=tmp.getContext('2d');
+    if(hl){tc.beginPath();hl.forEach((p,i)=>i?tc.lineTo(p.x-S.sel.x,p.y-S.sel.y):tc.moveTo(p.x-S.sel.x,p.y-S.sel.y));tc.closePath();tc.clip()}
+    tc.drawImage(curC(),-S.sel.x,-S.sel.y);S.clip=tmp;S.sel=null;S.lassoPath=[];S.ct='paste';document.querySelectorAll('[data-tool]').forEach(b=>b.classList.remove('on'));toast('コピー完了');return}
+  if(mode==='cut'){pU();if(hl){c.save();c.beginPath();hl.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.closePath();c.clip();c.clearRect(S.sel.x,S.sel.y,S.sel.w,S.sel.h);c.restore()}else c.clearRect(S.sel.x,S.sel.y,S.sel.w,S.sel.h);commitUndo();afterEdit();S.sel=null;S.lassoPath=[];toast('カット完了');return}
+  if(mode==='outline'){pU();const oC=$('selOC').value,oW=+$('selOW').value;const tmp=document.createElement('canvas');tmp.width=CW;tmp.height=CH;const tc=tmp.getContext('2d');
+    if(hl){tc.beginPath();hl.forEach((p,i)=>i?tc.lineTo(p.x,p.y):tc.moveTo(p.x,p.y));tc.closePath();tc.clip()}tc.drawImage(curC(),0,0);
+    const oc2=document.createElement('canvas');oc2.width=CW;oc2.height=CH;const oc=oc2.getContext('2d');const steps=Math.max(16,oW*4);
+    for(let i=0;i<steps;i++){const a=(i/steps)*Math.PI*2;oc.drawImage(tmp,Math.cos(a)*oW,Math.sin(a)*oW)}
+    oc.globalCompositeOperation='source-in';oc.fillStyle=oC;oc.fillRect(0,0,CW,CH);oc.globalCompositeOperation='source-over';
+    if(hl){c.save();c.beginPath();hl.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.closePath();c.clip()}
+    c.clearRect(Math.max(0,S.sel.x-oW-1),Math.max(0,S.sel.y-oW-1),S.sel.w+oW*2+2,S.sel.h+oW*2+2);c.drawImage(oc2,0,0);c.drawImage(tmp,0,0);if(hl)c.restore();
+    commitUndo();afterEdit();S.sel=null;S.lassoPath=[];toast('縁取り完了')}}
+function pasteAt(px,py){if(!S.clip)return;pU();curX().drawImage(S.clip,px-S.clip.width/2,py-S.clip.height/2);cx.fl.clearRect(0,0,CW,CH);commitUndo();afterEdit();toast('配置完了')}
+$('selCpBtn').onclick=()=>selAction('copy');$('selCtBtn').onclick=()=>selAction('cut');$('selOutBtn').onclick=()=>selAction('outline');
+$('selOW').oninput=e=>{$('selOWL').textContent=e.target.value};
+$('selCnBtn').onclick=()=>{$('selMo').classList.remove('show');S.sel=null;$('selBox').style.display='none';$('lassoPath').setAttribute('d','');S.lassoPath=[]};
+
+// ===================== Text =====================
+$('txOk').onclick=()=>{const t=$('txIn').value;if(t){pU();const c=curX();c.font=`bold ${S.txFs}px 'M PLUS Rounded 1c',sans-serif`;c.globalAlpha=S.alpha;c.textBaseline='top';
+  if($('txOL').checked){c.strokeStyle=$('txOC').value;c.lineWidth=+$('txOLW').value;c.lineJoin='round';c.miterLimit=2;c.strokeText(t,S.txX,S.txY)}
+  c.fillStyle=S.cc;c.fillText(t,S.txX,S.txY);c.globalAlpha=1;commitUndo();afterEdit()}$('txMo').classList.remove('show');$('txIn').value=''};
+$('txCn').onclick=()=>$('txMo').classList.remove('show');
+$('txSz').oninput=e=>{S.txFs=+e.target.value;$('txSL').textContent=e.target.value+'px'};
+$('txOL').onchange=e=>{$('txOLO').style.display=e.target.checked?'flex':'none'};
+$('txOLW').oninput=e=>{$('txOLWL').textContent=e.target.value+'px'};
+$('poChk').onchange=e=>{S.penOut=e.target.checked;$('poOpts').classList.toggle('show',S.penOut);$('poLbl').classList.toggle('on',S.penOut)};
+$('poCol').oninput=e=>{S.penOutC=e.target.value};$('poW').oninput=e=>{S.penOutW=+e.target.value};
+
+// ===================== Rotate/Flip =====================
+function rotL(deg){pU();const c=curX(),tmp=document.createElement('canvas');tmp.width=CW;tmp.height=CH;tmp.getContext('2d').drawImage(curC(),0,0);
+  c.clearRect(0,0,CW,CH);c.save();c.translate(CW/2,CH/2);c.rotate(deg*Math.PI/180);c.drawImage(tmp,-CW/2,-CH/2);c.restore();commitUndo();afterEdit();toast(deg+'°')}
+$('rotateBtn').onclick=()=>$('rotMo').classList.add('show');
+document.querySelectorAll('[data-rot]').forEach(b=>{b.onclick=()=>{rotL(+b.dataset.rot);$('rotMo').classList.remove('show')}});
+$('rotCBtn').onclick=()=>{rotL(+$('rotAng').value);$('rotMo').classList.remove('show')};
+$('flipHBtn').onclick=()=>{pU();const c=curX(),tmp=document.createElement('canvas');tmp.width=CW;tmp.height=CH;tmp.getContext('2d').drawImage(curC(),0,0);
+  c.clearRect(0,0,CW,CH);c.save();c.translate(CW,0);c.scale(-1,1);c.drawImage(tmp,0,0);c.restore();commitUndo();afterEdit();toast('反転')};
+
+// ===================== Onion skin =====================
+function updOn(){cx.on.clearRect(0,0,CW,CH);if(!S.onion||S.cf===0){cvs.on.style.opacity='0';return}cvs.on.style.opacity='.2';
+  const pf=S.frames[S.cf-1];if(!pf)return;const pc=S.fc.get(pf.id);if(pc&&pc.A){cx.on.putImageData(pc.A,0,0);cx.on.globalCompositeOperation='source-atop';cx.on.fillStyle='rgba(255,80,80,.3)';cx.on.fillRect(0,0,CW,CH);cx.on.globalCompositeOperation='source-over'}}
+
+// ===================== Layer panel =====================
+const LN={A:'A (上)',B:'B (中)',C:'C (下)'};
+function buildLL(){const el=$('layerList');el.innerHTML='';
+  [...layerOrder].reverse().forEach(l=>{const d=document.createElement('div');d.className='lr'+(S.cl===l?' on':'');
+    const vis=document.createElement('div');vis.className='lv'+(cvs[l].style.display!=='none'?' on':'');
+    vis.innerHTML='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>';
+    vis.onclick=e2=>{e2.stopPropagation();const on=cvs[l].style.display!=='none';cvs[l].style.display=on?'none':'block';vis.classList.toggle('on',!on)};d.appendChild(vis);
+    const sp=document.createElement('span');sp.textContent=LN[l];d.appendChild(sp);
+    const acts=document.createElement('div');acts.className='la';
+    [0,1].forEach(ti=>{const b=document.createElement('button');b.className='bq';b.innerHTML=ti===0?'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14l5-5 5 5z"/></svg>':'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>';
+      b.onclick=e2=>{e2.stopPropagation();const idx=layerOrder.indexOf(l);
+        if(ti===0&&idx<layerOrder.length-1){[layerOrder[idx],layerOrder[idx+1]]=[layerOrder[idx+1],layerOrder[idx]];updZO();buildLL()}
+        else if(ti===1&&idx>0){[layerOrder[idx],layerOrder[idx-1]]=[layerOrder[idx-1],layerOrder[idx]];updZO();buildLL()}};acts.appendChild(b)});d.appendChild(acts);
+    d.onclick=()=>{S.cl=l;buildLL()};el.appendChild(d)});
+  const pd=document.createElement('div');pd.className='lr'+(S.cl==='Photo'?' on':'');pd.style.background='#eee';
+  const pv=document.createElement('div');pv.className='lv'+(cvs.photo.style.display!=='none'?' on':'');
+  pv.innerHTML='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>';
+  pv.onclick=e2=>{e2.stopPropagation();const on=cvs.photo.style.display!=='none';cvs.photo.style.display=on?'none':'block';pv.classList.toggle('on',!on)};pd.appendChild(pv);
+  const ps2=document.createElement('span');ps2.textContent='写真/下絵';pd.appendChild(ps2);pd.onclick=()=>{S.cl='Photo';buildLL()};el.appendChild(pd)}
+
+$('mergeBtn').onclick=()=>$('mergeMo').classList.add('show');
+$('mergeDownBtn').onclick=()=>{if(S.cl==='Photo')return toast('不可');const idx=layerOrder.indexOf(S.cl);if(idx<=0)return toast('下なし');
+  pU();cx[layerOrder[idx-1]].drawImage(cvs[S.cl],0,0);cx[S.cl].clearRect(0,0,CW,CH);commitUndo();afterEdit();$('mergeMo').classList.remove('show');toast('統合完了')};
+$('mergeAllBtn').onclick=()=>{pU();const tmp=document.createElement('canvas');tmp.width=CW;tmp.height=CH;const tc=tmp.getContext('2d');
+  layerOrder.forEach(l=>tc.drawImage(cvs[l],0,0));cx.A.clearRect(0,0,CW,CH);cx.A.drawImage(tmp,0,0);cx.B.clearRect(0,0,CW,CH);cx.C.clearRect(0,0,CW,CH);
+  commitUndo();snapToCache();markAllDirtyForFrame(curId());curFr().thumbDirty=true;renderTLDebounced();$('mergeMo').classList.remove('show');toast('全統合→A')};
+$('addPhotoBtn').onclick=()=>$('imgIn').click();
+$('imgIn').onchange=e=>{const f=e.target.files[0];if(!f)return;const img=new Image;img.onload=()=>startImgPlace(img);img.src=URL.createObjectURL(f);$('imgIn').value=''};
+
+// ===================== (G) Timeline - reliable thumbnails =====================
+let _tlT=null;
+function renderTLDebounced(){if(_tlT)return;_tlT=requestAnimationFrame(()=>{_tlT=null;renderTL()})}
+
+function renderTL(){
+  const el=$('tls');el.innerHTML='';const frag=document.createDocumentFragment();
+
+  S.frames.forEach((fm,i)=>{
+    const d=document.createElement('div');d.className='ft'+(i===S.cf?' on':'');
+    // Get or create thumb canvas (persistent)
+    let tc=thumbs.get(fm.id);
+    if(!tc){tc=document.createElement('canvas');tc.width=TW;tc.height=TH;thumbs.set(fm.id,tc);fm.thumbDirty=true}
+    if(i===S.cf){
+      // Current frame: always render from live canvases
+      renderThumb(fm.id,tc,true);fm.thumbDirty=false;tc._rendered=true;
+    } else if(fm.thumbDirty){
+      // Non-current: only render if cache is available
+      const cached=S.fc.has(fm.id)&&S.fc.get(fm.id);
+      if(cached){renderThumb(fm.id,tc,false);fm.thumbDirty=false;tc._rendered=true}
+      // If no cache: keep old thumbnail intact, leave thumbDirty=true for retry after preload
+    }
+    // Clone for DOM
+    const dc=document.createElement('canvas');dc.width=TW;dc.height=TH;dc.getContext('2d').drawImage(tc,0,0);
+    const n=document.createElement('div');n.className='fn';n.textContent=i+1;
+    d.appendChild(dc);d.appendChild(n);
+    if(fm.sfx){const s=document.createElement('div');s.className='fsfx';s.innerHTML='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3z"/></svg>';d.appendChild(s)}
+    d.onclick=()=>swF(i);frag.appendChild(d)});
+  el.appendChild(frag);$('curF').textContent=S.cf+1;$('totF').textContent=S.frames.length;
+  const ac=el.querySelector('.ft.on');if(ac)ac.scrollIntoView({behavior:'smooth',inline:'center'});
+  // Trigger async preload for nearby frames
+  schedulePreload();
+}
+
+function renderThumb(fid, tc, isCurrent) {
+  const x = tc.getContext('2d');
+  if (isCurrent) {
+    // Current frame: draw from live canvases
+    x.fillStyle = S.pc; x.fillRect(0, 0, TW, TH);
+    x.drawImage(cvs.photo, 0, 0, TW, TH);
+    layerOrder.forEach(l => { if (cvs[l].style.display !== 'none') x.drawImage(cvs[l], 0, 0, TW, TH); });
+  } else {
+    const c = S.fc.get(fid);
+    if (!c) return false; // Cache miss: don't touch thumb, caller keeps old content
+    x.fillStyle = S.pc; x.fillRect(0, 0, TW, TH);
+    const tmp = document.createElement('canvas'); tmp.width = CW; tmp.height = CH;
+    const tx = tmp.getContext('2d');
+    if (c.P) { tx.putImageData(c.P, 0, 0); x.drawImage(tmp, 0, 0, TW, TH); tx.clearRect(0, 0, CW, CH); }
+    layerOrder.forEach(l => { if (c[l]) { tx.clearRect(0, 0, CW, CH); tx.putImageData(c[l], 0, 0); x.drawImage(tmp, 0, 0, TW, TH); } });
+  }
+  return true;
+}
+
+// ===================== (F) Playback - preload + rAF + audio sync =====================
+let playRAF, bgmSrc, playT0, playF0;
+
+async function play() {
+  if (S.frames.length < 2) return toast('2F以上必要');
+  snapToCache(); // save current
+  // Preload ALL frames into cache
+  for (let i = 0; i < S.frames.length; i++) {
+    await ensureCached(S.frames[i].id);
+  }
+  S.playing = true;
+  $('playBtn').style.display = 'none'; $('stopBtn').style.display = 'flex';
+  // BGM
+  if (S.bgmBuf) {
+    try { const ac = SFX.ctx(); bgmSrc = ac.createBufferSource(); bgmSrc.buffer = S.bgmBuf; bgmSrc.connect(ac.destination);
+      bgmSrc.start(0, (S.cf / S.frames.length) * (S.frames.length / S.fps)); } catch (e) {}
+  }
+  playT0 = performance.now(); playF0 = S.cf;
+  let lastFi = -1;
+  function tick(now) {
+    if (!S.playing) return;
+    const elapsed = (now - playT0) / 1000;
+    const fi = playF0 + Math.floor(elapsed * S.fps);
+    if (fi >= S.frames.length) { stop(); return; }
+    if (fi !== lastFi) {
+      lastFi = fi;
+      const fid = S.frames[fi].id;
+      const c = S.fc.get(fid);
+      if (c) {
+        [['A','A'],['B','B'],['C','C'],['P','photo']].forEach(([k, cv]) => {
+          cx[cv].clearRect(0, 0, CW, CH);
+          if (c[k]) cx[cv].putImageData(c[k], 0, 0);
+        });
+      }
+      S.cf = fi; $('curF').textContent = fi + 1;
+      const items = $('tls').children;
+      for (let j = 0; j < items.length; j++) items[j].classList.toggle('on', j === fi);
+      // Scroll timeline to track playback (instant, not smooth - avoids animation queue buildup)
+      if (items[fi]) items[fi].scrollIntoView({behavior:'auto',inline:'center',block:'nearest'});
+      if (S.frames[fi].sfx) SFX.play(S.frames[fi].sfx);
+    }
+    playRAF = requestAnimationFrame(tick);
+  }
+  playRAF = requestAnimationFrame(tick);
+}
+
+function stop() {
+  S.playing = false; if (playRAF) { cancelAnimationFrame(playRAF); playRAF = null; }
+  $('playBtn').style.display = 'flex'; $('stopBtn').style.display = 'none';
+  if (bgmSrc) try { bgmSrc.stop(); } catch (e) {}
+  cacheToCanvas(curId()); renderTL();
+  if (syncRec && syncRec.state === 'recording') syncRec.stop();
+}
+
+// ===================== Audio =====================
+let syncRec = null, syncChunks = [];
+$('recSyncBtn').onclick = async () => {
+  try { const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    syncRec = new MediaRecorder(stream); syncChunks = [];
+    syncRec.ondataavailable = e => { if (e.data.size > 0) syncChunks.push(e.data); };
+    syncRec.onstop = async () => { stream.getTracks().forEach(t => t.stop());
+      if (!syncChunks.length) return;
+      try { S.bgmBuf = await SFX.ctx().decodeAudioData(await new Blob(syncChunks, { type: 'audio/webm' }).arrayBuffer()); $('prevABtn').disabled = false; toast('録音完了'); }
+      catch (e) { toast('失敗'); } };
+    syncRec.start(); toast('録音+再生'); if (!S.playing) play();
+  } catch (e) { toast('マイク拒否'); } };
+$('audioBtn').onclick = () => $('audioMo').classList.add('show');
+$('bgmFile').onchange = async e => { const f = e.target.files[0]; if (!f) return;
+  try { S.bgmBuf = await SFX.ctx().decodeAudioData(await f.arrayBuffer()); $('prevABtn').disabled = false; toast('BGM: ' + f.name); } catch (er) { toast('失敗'); } };
+$('prevABtn').onclick = () => { if (S.bgmBuf) { const ac = SFX.ctx(), src = ac.createBufferSource(); src.buffer = S.bgmBuf; src.connect(ac.destination); src.start(); setTimeout(() => { try { src.stop(); } catch (e) {} }, 3000); toast('3秒プレビュー'); } };
+$('clrABtn').onclick = () => { S.bgmBuf = null; $('prevABtn').disabled = true; toast('クリア'); };
+$('asSfxBtn').onclick = () => { const v = $('sfxSel').value; curFr().sfx = v; if (v) SFX.play(v); renderTL(); toast(v ? '割当' : '解除'); };
+
+// ===================== Export =====================
+let pendingExp = '';
+function showQualMo(t) { pendingExp = t; $('qualLabel').textContent = t === 'gif' ? 'GIF' : 'WebM'; $('qualDur').textContent = (S.frames.length / S.fps).toFixed(1); $('qualFr').textContent = S.frames.length; $('qualMo').classList.add('show'); document.querySelectorAll('.qs label').forEach(l => l.classList.toggle('on', l.querySelector('input').checked)); }
+document.querySelectorAll('.qs input').forEach(r => { r.onchange = () => document.querySelectorAll('.qs label').forEach(l => l.classList.toggle('on', l.querySelector('input').checked)); });
+$('qualOk').onclick = () => { $('qualMo').classList.remove('show'); const q = document.querySelector('.qs input:checked').value; pendingExp === 'gif' ? doExpGIF(q) : doExpMP4(q); };
+$('expGifBtn').onclick = () => showQualMo('gif'); $('expMp4Btn').onclick = () => showQualMo('mp4');
+
+function renderFrameEx(tc, fid, ow, oh) {
+  tc.fillStyle = S.pc; tc.fillRect(0, 0, ow, oh);
+  const c = S.fc.get(fid); if (!c) return;
+  const tmp = document.createElement('canvas'); tmp.width = CW; tmp.height = CH; const tx = tmp.getContext('2d');
+  const mk = k => { if (!c[k]) return; tx.clearRect(0, 0, CW, CH); tx.putImageData(c[k], 0, 0); tc.drawImage(tmp, 0, 0, ow, oh); };
+  mk('P'); layerOrder.forEach(l => mk(l));
+}
+
+async function doExpGIF(q) {
+  snapToCache();
+  for (let i = 0; i < S.frames.length; i++) await ensureCached(S.frames[i].id);
+  $('expMo').classList.add('show'); $('expTi').textContent = 'GIF生成中...';
+  const sc = q === 'low' ? .5 : 1, ow = Math.round(CW * sc), oh = Math.round(CH * sc), delay = Math.round(1000 / S.fps);
+  const tmp = document.createElement('canvas'); tmp.width = ow; tmp.height = oh; const tc = tmp.getContext('2d');
+  const framesData = [];
+  for (let i = 0; i < S.frames.length; i++) { renderFrameEx(tc, S.frames[i].id, ow, oh); framesData.push(tc.getImageData(0, 0, ow, oh).data.buffer);
+    $('expBar').style.width = ((i + 1) / S.frames.length * 40) + '%'; $('expMsg').textContent = `レンダリング ${i + 1}/${S.frames.length}`; await new Promise(r => setTimeout(r, 2)); }
+  if (W) {
+    const bufs = framesData.map(b => b); // already transferred
+    const res = await wCall({ type: 'gifEncode', w: ow, h: oh, framesData: bufs, delay }, bufs, d => {
+      $('expBar').style.width = (40 + d.frame / d.total * 55) + '%'; $('expMsg').textContent = `エンコード ${d.frame}/${d.total}`; });
+    $('expBar').style.width = '100%';
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([new Uint8Array(res.data)], { type: 'image/gif' }));
+    a.download = 'ugomemo_' + Date.now() + '.gif'; a.click(); $('expMo').classList.remove('show'); toast('GIF保存完了');
+  } else { $('expMo').classList.remove('show'); toast('Worker非対応'); }
+}
+
+async function doExpMP4(q) {
+  snapToCache();
+  for (let i = 0; i < S.frames.length; i++) await ensureCached(S.frames[i].id);
+  $('expMo').classList.add('show'); $('expTi').textContent = '動画生成中...'; $('expBar').style.width = '0%';
+  const sc = q === 'low' ? .5 : q === 'mid' ? 1 : 1.5, bps = q === 'low' ? 2e6 : q === 'mid' ? 4e6 : 8e6;
+  const ow = Math.round(CW * sc), oh = Math.round(CH * sc), ew = ow % 2 === 0 ? ow : ow + 1, eh = oh % 2 === 0 ? oh : oh + 1;
+  const ec = document.createElement('canvas'); ec.width = ew; ec.height = eh; const ex = ec.getContext('2d');
+  const mimes = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm']; let mime = mimes.find(m => MediaRecorder.isTypeSupported(m));
+  if (!mime) { $('expMo').classList.remove('show'); return toast('非対応'); }
+  const stream = ec.captureStream(S.fps);
+  if (S.bgmBuf) { try { const ac = SFX.ctx(), ad = ac.createMediaStreamDestination(), src = ac.createBufferSource(); src.buffer = S.bgmBuf; src.connect(ad); ad.stream.getAudioTracks().forEach(t => stream.addTrack(t)); src.start(0, 0, S.frames.length / S.fps); } catch (e) {} }
+  const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: bps }), chunks = [];
+  rec.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+  return new Promise(res => {
+    rec.onstop = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(chunks, { type: mime })); a.download = `ugomemo_${Date.now()}.webm`; a.click(); $('expMo').classList.remove('show'); toast('WebM保存完了'); res(); };
+    rec.start(); let fi = 0; const fd = 1000 / S.fps;
+    const render = () => { renderFrameEx(ex, S.frames[fi].id, ew, eh); $('expBar').style.width = ((fi + 1) / S.frames.length * 100) + '%'; $('expMsg').textContent = `${fi + 1}/${S.frames.length}`;
+      fi++; fi < S.frames.length ? setTimeout(render, fd) : setTimeout(() => rec.stop(), fd + 100); }; render(); });
+}
+
+// ===================== Save/Load (file) =====================
+$('saveBtn').onclick = async () => { snapToCache();
+  for (let i = 0; i < S.frames.length; i++) await ensureCached(S.frames[i].id);
+  const data = { w: CW, h: CH, pc: S.pc, fps: S.fps, ratio: S.ratio, cf: S.cf, lo: layerOrder,
+    frames: S.frames.map(f => { const c = S.fc.get(f.id) || {}; return { id: f.id, sfx: f.sfx,
+      A: c.A ? Array.from(c.A.data) : null, B: c.B ? Array.from(c.B.data) : null,
+      C: c.C ? Array.from(c.C.data) : null, P: c.P ? Array.from(c.P.data) : null }; }) };
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: 'application/json' }));
+  a.download = 'ugomemo_' + Date.now() + '.ugomemo'; a.click(); toast('保存完了'); };
+
+$('loadBtn').onclick = () => $('projIn').click();
+$('projIn').onchange = async e => { const file = e.target.files[0]; if (!file) return;
+  try { const data = JSON.parse(await file.text());
+    CW = data.w; CH = data.h; S.pc = data.pc || '#FFFFFF'; S.fps = data.fps || 8; S.ratio = data.ratio || '4:3';
+    if (data.lo) layerOrder = data.lo;
+    $('fpsR').value = S.fps; $('fpsN').textContent = S.fps; $('rBadge').textContent = S.ratio;
+    initCanvas(); updPC(); S.fc.clear(); thumbs.clear(); S.undoStack = []; S.redoStack = []; S.dirtyIds.clear(); S.dirtyLayers.clear();
+    S.frames = data.frames.map(f => {
+      const nf = { id: f.id || uid(), sfx: f.sfx || '', thumbDirty: true };
+      const c = { A: null, B: null, C: null, P: null };
+      ['A', 'B', 'C', 'P'].forEach(k => { if (f[k]) c[k] = new ImageData(new Uint8ClampedArray(f[k]), CW, CH); });
+      S.fc.set(nf.id, c); return nf; });
+    S.cf = Math.min(data.cf || 0, S.frames.length - 1);
+    cacheToCanvas(curId()); buildLL(); renderTL();
+    for (let i = 0; i < S.frames.length; i++) markAllDirtyForFrame(S.frames[i].id);
+    toast('読込完了');
+  } catch (er) { toast('エラー: ' + er.message); } $('projIn').value = ''; };
+
+// ===================== Ratio =====================
+let pendingRatio = null;
+document.querySelectorAll('.ro').forEach(o => { o.onclick = () => {
+  const r = o.dataset.r, nw = +o.dataset.w, nh = +o.dataset.h;
+  if (r === S.ratio) { $('ratioMo').classList.remove('show'); return; }
+  let has = S.frames.length > 1;
+  if (!has) for (const l of ['A', 'B', 'C']) { const d = cx[l].getImageData(0, 0, CW, CH).data; for (let i = 3; i < d.length; i += 4) if (d[i] > 0) { has = true; break; } if (has) break; }
+  if (has) { pendingRatio = { r, nw, nh, el: o }; $('ratioMo').classList.remove('show'); $('ratioConfMo').classList.add('show'); return; }
+  applyRatio(r, nw, nh, o); }; });
+function applyRatio(r, nw, nh, el) {
+  document.querySelectorAll('.ro').forEach(x => x.classList.remove('on')); if (el) el.classList.add('on');
+  S.ratio = r; CW = nw; CH = nh; $('rBadge').textContent = r; initCanvas(); updPC();
+  S.fc.clear(); thumbs.clear(); S.frames = [mkFrame()]; S.cf = 0; S.undoStack = []; S.redoStack = [];
+  S.dirtyIds.clear(); S.dirtyLayers.clear(); snapToCache(); markAllDirtyForFrame(curId()); renderTL(); updOn();
+  $('ratioMo').classList.remove('show'); toast('比率: ' + r); }
+$('ratioConfOk').onclick = () => { $('ratioConfMo').classList.remove('show'); if (pendingRatio) applyRatio(pendingRatio.r, pendingRatio.nw, pendingRatio.nh, pendingRatio.el); pendingRatio = null; };
+$('ratioConfNo').onclick = () => { $('ratioConfMo').classList.remove('show'); pendingRatio = null; };
+
+// ===================== UI bindings =====================
+$('firstFBtn').onclick = () => { if (S.cf > 0) swF(0); };
+$('lastFBtn').onclick = () => { if (S.cf < S.frames.length - 1) swF(S.frames.length - 1); };
+$('pgbClick').onclick = () => { $('gotoNum').value = S.cf + 1; $('gotoMax').textContent = S.frames.length; $('gotoMo').classList.add('show'); $('gotoNum').focus(); };
+$('gotoOk').onclick = () => { const n = Math.max(1, Math.min(S.frames.length, +$('gotoNum').value)) - 1; $('gotoMo').classList.remove('show'); if (n !== S.cf) swF(n); };
+$('addMFBtn').onclick = () => $('addMMo').classList.add('show');
+$('addMOk').onclick = () => { const n = Math.max(1, Math.min(200, +$('addMNum').value)); $('addMMo').classList.remove('show'); snapToCache();
+  for (let i = 0; i < n; i++) { const nf = mkFrame(); const nc = { A: null, B: null, C: null, P: null }; const oc = S.fc.get(curId());
+    if (oc && oc.P) nc.P = new ImageData(new Uint8ClampedArray(oc.P.data), CW, CH);
+    S.frames.splice(S.cf + 1 + i, 0, nf); S.fc.set(nf.id, nc); markAllDirtyForFrame(nf.id); }
+  S.cf += n; ensureCached(curId()).then(() => cacheToCanvas(curId())); renderTL(); toast(n + 'F追加'); };
+$('paperBtn').onclick = () => $('paperMo').classList.add('show');
+document.querySelectorAll('.pco').forEach(o => { o.onclick = () => { document.querySelectorAll('.pco').forEach(x => x.classList.remove('on')); o.classList.add('on'); S.pc = o.dataset.p; updPC(); }; });
+$('onionBtn').onclick = () => { S.onion = !S.onion; $('onionBtn').classList.toggle('on', S.onion); updOn(); toast(S.onion ? '透かしON' : 'OFF'); };
+$('ratioBtn').onclick = () => $('ratioMo').classList.add('show');
+document.querySelectorAll('[data-tool]').forEach(b => { b.onclick = () => {
+  if (S.ct === 'paste') cx.fl.clearRect(0, 0, CW, CH);
+  document.querySelectorAll('[data-tool]').forEach(t => t.classList.remove('on')); b.classList.add('on'); S.ct = b.dataset.tool;
+  $('selBox').style.display = 'none'; $('lassoPath').setAttribute('d', ''); S.sel = null; S.lassoPath = [];
+  vp.style.cursor = S.ct === 'hand' ? 'grab' : 'crosshair';
+  if (innerWidth <= 900) { $('toolbarL').classList.remove('open'); $('mobTabTB').classList.remove('shifted'); } }; });
+document.querySelectorAll('.cs').forEach(c => { c.onclick = () => { document.querySelectorAll('.cs').forEach(x => x.classList.remove('on')); c.classList.add('on'); S.cc = c.dataset.c; }; });
+$('ccPick').oninput = e => { S.cc = e.target.value; document.querySelectorAll('.cs').forEach(x => x.classList.remove('on')); };
+document.querySelectorAll('.psb').forEach(b => { b.onclick = () => { document.querySelectorAll('.psb').forEach(x => x.classList.remove('on')); b.classList.add('on'); S.cs = +b.dataset.size; }; });
+$('alphaRng').oninput = e => { S.alpha = +e.target.value / 100; $('alphaLbl').textContent = e.target.value + '%'; };
+$('zoomInBtn').onclick = () => { S.zoom = Math.min(8, S.zoom * 1.25); updT(); };
+$('zoomOutBtn').onclick = () => { S.zoom = Math.max(.1, S.zoom / 1.25); updT(); };
+$('resetVBtn').onclick = fitView;
+$('addFBtn').onclick = addF; $('delFBtn').onclick = delF;
+$('cpFBtn').onclick = () => { snapToCache(); const c = S.fc.get(curId()); const cl = {};
+  ['A', 'B', 'C', 'P'].forEach(k => { cl[k] = c && c[k] ? new ImageData(new Uint8ClampedArray(c[k].data), CW, CH) : null; });
+  S.frClip = { cache: cl, sfx: curFr().sfx }; toast('F複写'); };
+$('psFBtn').onclick = () => { if (!S.frClip) return toast('コピーなし');
+  const nf = mkFrame(); nf.sfx = S.frClip.sfx;
+  const nc = {}; ['A', 'B', 'C', 'P'].forEach(k => { nc[k] = S.frClip.cache[k] ? new ImageData(new Uint8ClampedArray(S.frClip.cache[k].data), CW, CH) : null; });
+  S.frames.splice(S.cf + 1, 0, nf); S.fc.set(nf.id, nc); S.cf++;
+  cacheToCanvas(curId()); markAllDirtyForFrame(nf.id); renderTL(); toast('F貼付'); };
+$('playBtn').onclick = play; $('stopBtn').onclick = stop;
+$('prevFBtn').onclick = () => { if (S.cf > 0) swF(S.cf - 1); };
+$('nextFBtn').onclick = () => { if (S.cf < S.frames.length - 1) swF(S.cf + 1); };
+$('fpsR').oninput = e => { S.fps = +e.target.value; $('fpsN').textContent = S.fps; if (S.playing) { stop(); play(); } };
+$('undoBtn').onclick = undo; $('redoBtn').onclick = redo;
+$('clrAllBtn').onclick = async () => { if (!confirm('全消し？')) return;
+  S.frames = [mkFrame()]; S.cf = 0; ['A', 'B', 'C', 'photo'].forEach(k => cx[k].clearRect(0, 0, CW, CH));
+  S.undoStack = []; S.redoStack = []; S.fc.clear(); thumbs.clear(); S.dirtyIds.clear(); S.dirtyLayers.clear();
+  snapToCache(); markAllDirtyForFrame(curId()); updOn(); renderTL(); if (DB.db) await DB.clear(DB.SF); };
+
+// ===================== Mobile =====================
+const mobOv = $('mobOv');
+$('menuBtn').onclick = () => {
+  if (innerWidth <= 900) { const p = $('rPanel'), showing = p.classList.contains('show');
+    $('toolbarL').classList.remove('open'); $('mobTabTB').classList.remove('shifted');
+    p.classList.toggle('show'); mobOv.classList.toggle('show'); $('vp').classList.toggle('blocked', !showing);
+  } else { const p = $('rPanel'); p.style.display = p.style.display === 'none' ? 'flex' : 'none'; } };
+mobOv.onclick = () => { $('rPanel').classList.remove('show'); mobOv.classList.remove('show'); $('vp').classList.remove('blocked'); };
+$('mobTabTB').onclick = () => { $('rPanel').classList.remove('show'); mobOv.classList.remove('show'); $('vp').classList.remove('blocked');
+  $('toolbarL').classList.toggle('open'); $('mobTabTB').classList.toggle('shifted'); };
+$('mobTabTL').onclick = () => { $('tlArea').classList.toggle('mob-hidden'); $('mobTabTL').classList.toggle('shifted'); setTimeout(fitView, 250); };
+
+// ===================== Keyboard =====================
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (e.ctrlKey || e.metaKey) {
+    if (e.key === 'z') { e.preventDefault(); undo(); } if (e.key === 'y') { e.preventDefault(); redo(); }
+    if (e.key === 'c' && S.sel) { e.preventDefault(); selAction('copy'); }
+    if (e.key === 'v' && S.clip) { e.preventDefault(); S.ct = 'paste'; document.querySelectorAll('[data-tool]').forEach(b => b.classList.remove('on')); toast('ペーストモード'); } }
+  if (e.key === ' ') { e.preventDefault(); S.playing ? stop() : play(); }
+  if (e.key === 'ArrowRight' && !S.playing && S.cf < S.frames.length - 1) swF(S.cf + 1);
+  if (e.key === 'ArrowLeft' && !S.playing && S.cf > 0) swF(S.cf - 1);
+  if (e.key === 'Home') swF(0); if (e.key === 'End') swF(S.frames.length - 1);
+  if (e.key === 'Enter' && S.img) commitImg(); if (e.key === 'Escape' && S.img) cancelImg();
+});
+
+window.addEventListener('resize', () => { fitView();
+  if (innerWidth > 900) { $('rPanel').style.display = ''; $('rPanel').classList.remove('show'); mobOv.classList.remove('show'); $('vp').classList.remove('blocked'); $('toolbarL').classList.remove('open'); $('mobTabTB').classList.remove('shifted'); } });
+
+window.addEventListener('beforeunload', () => { snapToCache(); markAllDirtyForFrame(curId());
+  if (_saveT) { clearTimeout(_saveT); _saveT = null; } flushIDB(); });
+
+function toast(m) { const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2000); }
+
+// ===================== Init =====================
+async function init() {
+  try { await DB.open(); } catch (e) { console.warn('IDB:', e); }
+  let restored = false;
+  try {
+    const meta = await DB.loadMeta();
+    if (meta && meta.frames && meta.frames.length > 0) {
+      CW = meta.w; CH = meta.h; S.pc = meta.pc || '#FFFFFF'; S.fps = meta.fps || 8; S.ratio = meta.ratio || '4:3';
+      if (meta.lo) layerOrder = meta.lo;
+      $('fpsR').value = S.fps; $('fpsN').textContent = S.fps; $('rBadge').textContent = S.ratio;
+      initCanvas(); updPC();
+      S.frames = meta.frames.map(f => ({ id: f.id, sfx: f.sfx || '', thumbDirty: true }));
+      S.cf = Math.min(meta.cf || 0, S.frames.length - 1);
+      // Load current frame immediately
+      await ensureCached(S.frames[S.cf].id);
+      cacheToCanvas(curId()); restored = true; toast('復元完了');
+      // Preload nearby ±18 async (don't await - let UI show first)
+      preloadNearby();
+    }
+  } catch (e) { console.warn('Restore:', e); }
+  if (!restored) { initCanvas(); updPC(); S.frames = [mkFrame()]; snapToCache(); }
+  buildLL(); renderTL();
+}
+init();
+</script>
+</body>
+</html>

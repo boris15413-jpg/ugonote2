@@ -1,42 +1,592 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="theme-color" content="#FF6600">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="うごくノート">
-  <meta name="theme-color" content="#FF6600">
-  <meta name="description" content="うごくノート - うごメモ風アニメーション作成ツール">
-  <title>うごくノート</title>
-  <link rel="manifest" href="./static/manifest.json">
-  <link rel="apple-touch-icon" href="./static/icons/icon-192.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="./static/icons/icon-192.png">
-  <link rel="stylesheet" href="./static/css/app.css">
-  <script src="./static/js/export/mp4-muxer.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <script src="https://unpkg.com/polygon-clipping@0.15.7/dist/polygon-clipping.umd.min.js"></script>
-<script src="https://unpkg.com/fflate@0.8.2/umd/index.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>うごくノート</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="css/core.css">
+<link rel="stylesheet" href="css/splash.css">
+<link rel="stylesheet" href="css/editor.css">
+<link rel="stylesheet" href="css/gallery.css">
+<link rel="stylesheet" href="css/dialogs.css">
+<link rel="stylesheet" href="css/audio-studio.css">
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style id="bootStyle">
+/* Show correct screen immediately while JS loads (SPA: hash-based).
+   JS will remove this style once init() completes. */
+.screen { opacity:0; display:none !important; }
+/* Default: show splash if no hash */
+#splashScreen.screen { display:flex !important; flex-direction:column; opacity:1; }
+</style>
+<script>
+/* Immediately show the correct screen based on hash to prevent flicker */
+(function(){
+  var h=(location.hash||'').replace('#','');
+  var ss;
+  try{ss=sessionStorage.getItem('ugokuLastScreen')}catch(e){}
+  var target=h||ss||'splash';
+  if(target&&target!=='splash'){
+    var s=document.getElementById('bootStyle');
+    if(s)s.textContent='.screen{opacity:0;display:none!important}#'+target+'Screen.screen{display:flex!important;flex-direction:column;opacity:1}';
+  }
+})();
+</script>
 </head>
 <body>
-  <div id="app"></div>
 
-  <script src="./static/js/core/namespace.js"></script>
-  <script src="./static/js/core/utils.js"></script>
-  <script src="./static/js/core/renderer.js"></script>
-  <script src="./static/js/core/state.js"></script>
-  <script src="./static/js/core/engine.js"></script>
-  <script src="./static/js/core/vector.js"></script>
+<!-- ==================== SPLASH SCREEN ==================== -->
+<div id="splashScreen" class="screen">
+  <div class="splash-grid-bg"></div>
+  <div class="splash-content">
+    <div class="splash-title">うごくノート<sup class="tm">TM</sup></div>
+    <button class="splash-start" id="startBtn">
+      <span class="key-badge">ZL</span> + <span class="key-badge">ZR</span> を押す
+    </button>
+    <div class="splash-copy">&copy; 2025 Ugoku Note Web</div>
+  </div>
+</div>
 
-  <script src="./static/js/tools/drawing.js"></script>
-  <script src="./static/js/audio/audio.js"></script>
-  <script src="./static/js/timeline/timeline.js"></script>
-  <script src="./static/js/export/export.js"></script>
-  <script src="./static/js/storage/storage.js"></script>
+<!-- ==================== GALLERY SCREEN ==================== -->
+<div id="galleryScreen" class="screen">
+  <div class="gal-wrap">
+    <!-- Left: Preview + Info -->
+    <div class="gal-left">
+      <div class="gal-preview-box">
+        <canvas id="galPreviewCvs" width="320" height="240"></canvas>
+        <div class="gal-frame-counter"><span id="galFrameNum">0001</span>/<span id="galFrameTotal">0001</span></div>
+      </div>
+      <div class="gal-playback">
+        <button class="gal-pb" data-gact="first"><svg viewBox="0 0 24 24"><path d="M18 18l-8.5-6L18 6v12zM8 6H6v12h2z" fill="currentColor"/></svg></button>
+        <button class="gal-pb" data-gact="prev"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" fill="currentColor"/></svg></button>
+        <button class="gal-pb play" data-gact="play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></button>
+        <button class="gal-pb" data-gact="next"><svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" fill="currentColor"/></svg></button>
+        <button class="gal-pb" data-gact="last"><svg viewBox="0 0 24 24"><path d="M6 6l8.5 6L6 18V6zm10 0h2v12h-2z" fill="currentColor"/></svg></button>
+      </div>
+      <!-- Info Card -->
+      <div class="gal-info-card">
+        <div class="gal-info-title-row">
+          <span class="gal-info-name" id="galInfoTitle">新しいメモ</span>
+          <button class="gal-edit-title" id="galEditTitleBtn"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
+        </div>
+        <div class="gal-info-desc" id="galInfoDesc">説明がありません</div>
+        <div class="gal-info-meta">
+          <div class="meta-row"><span class="meta-label">作者</span><span class="meta-val" id="galInfoAuthor">ユーザー</span></div>
+          <div class="meta-row"><span class="meta-label">更新日時</span><span class="meta-val" id="galInfoDate">-</span></div>
+          <div class="meta-row"><span class="meta-label">フレーム</span><span class="meta-val" id="galInfoFrames">1</span></div>
+        </div>
+      </div>
+      <!-- Action Buttons -->
+      <div class="gal-actions">
+        <button class="gal-act" id="galEditBtn">かく</button>
+        <button class="gal-act" id="galViewBtn">みる</button>
+        <button class="gal-act danger" id="galDeleteBtn">消す</button>
+        <button class="gal-act" id="galExportBtn">出力する</button>
+        <button class="gal-act accent" id="galShareBtn">送る</button>
+      </div>
+    </div>
+    <!-- Right: Thumbnail Grid -->
+    <div class="gal-right">
+      <div class="gal-top-bar">
+        <button class="gal-new-btn" id="galNewBtn"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> メモを書く</button>
+        <button class="gal-opt-btn" id="galImportBtn">読み込み</button>
+        <button class="gal-opt-btn" id="galOptionsBtn">オプション</button>
+      </div>
+      <div class="gal-grid" id="galGrid">
+        <!-- Memo thumbnails dynamically inserted -->
+      </div>
+      <div class="gal-pager" id="galPager">
+        <!-- Page dots dynamically -->
+      </div>
+    </div>
+  </div>
+</div>
 
-  <script src="./static/js/ui/builder.js"></script>
+<!-- ==================== EDITOR SCREEN ==================== -->
+<div id="editorScreen" class="screen">
+  <div class="ed-layout">
+    <!-- Top Canvas Area (upper screen simulation) -->
+    <div class="ed-upper">
+      <!-- Undo/Redo -->
+      <div class="ed-undo-area">
+        <button class="ed-undo-btn" id="undoBtn" title="元に戻す">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 14L4 9l5-5"/><path d="M20 20v-7a4 4 0 00-4-4H4"/></svg>
+        </button>
+        <button class="ed-undo-btn" id="redoBtn" title="やり直し">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 14l5-5-5-5"/><path d="M4 20v-7a4 4 0 014-4h12"/></svg>
+        </button>
+      </div>
+      <!-- Layer Tabs -->
+      <div class="ed-layer-tabs">
+        <div class="layer-tab on" data-layer="A">A</div>
+        <div class="layer-tab" data-layer="B">B</div>
+        <div class="layer-tab" data-layer="C">C</div>
+      </div>
+      <!-- Canvas Viewport -->
+      <div class="ed-viewport" id="vp">
+        <div class="ed-canvas-wrap" id="cw">
+          <canvas id="bgC"></canvas>
+          <canvas id="lC"></canvas>
+          <canvas id="lB"></canvas>
+          <canvas id="lA"></canvas>
+          <canvas id="onC"></canvas>
+          <canvas id="strokeC"></canvas>
+          <canvas id="drC"></canvas>
+          <canvas id="floatC"></canvas>
+          <div id="selBox"></div>
+          <svg id="selPath" xmlns="http://www.w3.org/2000/svg"><path id="lassoPath" fill="rgba(255,255,0,.15)" stroke="#000" stroke-width="2" stroke-dasharray="5 4" d=""/></svg>
+        </div>
+        <div class="vp-badge zoom-badge" id="zDisp">100%</div>
+        <div class="vp-badge ratio-badge" id="rBadge">4:3</div>
+        <div class="img-hud" id="imgHud">
+          <span id="imgHudTxt">ドラッグ移動 / ピンチ拡縮</span>
+          <button class="hud-btn" id="imgOk">決定</button>
+          <button class="hud-btn sec" id="imgCn">取消</button>
+        </div>
+      </div>
+      <!-- Frame Counter + Color indicators -->
+      <div class="ed-frame-info">
+        <span class="ed-frame-num" id="frameCounterClick"><span id="curF">1</span>/<span id="totF">1</span></span>
+        <div class="ed-color-indicators">
+          <div class="color-ind main" id="mainColorInd" style="background:#111"></div>
+          <div class="color-ind sub" style="background:#fff"></div>
+        </div>
+      </div>
+    </div>
 
-  <script src="./static/js/app.js" data-worker-url="./static/js/workers/compute.js"></script>
+    <!-- Playback Controls (between upper and lower) -->
+    <div class="ed-playback-bar">
+      <button class="pb-btn" id="firstFBtn"><svg viewBox="0 0 24 24"><path d="M18 18l-8.5-6L18 6v12zM8 6H6v12h2z" fill="currentColor"/></svg></button>
+      <button class="pb-btn" id="prevFBtn"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" fill="currentColor"/></svg></button>
+      <button class="pb-btn play-main" id="playBtn">
+        <svg viewBox="0 0 24 24" fill="currentColor" class="ico-play"><path d="M8 5v14l11-7z"/></svg>
+        <svg viewBox="0 0 24 24" fill="currentColor" class="ico-stop" style="display:none"><rect x="6" y="5" width="12" height="14" rx="1"/></svg>
+      </button>
+      <button class="pb-btn" id="nextFBtn"><svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" fill="currentColor"/></svg></button>
+      <button class="pb-btn" id="lastFBtn"><svg viewBox="0 0 24 24"><path d="M6 6l8.5 6L6 18V6zm10 0h2v12h-2z" fill="currentColor"/></svg></button>
+      <button class="pb-btn small" id="camBtn" title="写真"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 10.8a3.2 3.2 0 100 6.4 3.2 3.2 0 000-6.4zm8-2.8h-3.17L15.4 6H8.6L7.17 8H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V10a2 2 0 00-2-2z"/></svg></button>
+    </div>
+
+    <!-- Lower Panel: Tools + Right Sidebar -->
+    <div class="ed-lower">
+      <!-- Tool Panel (right side of lower, can be toggled) -->
+      <div class="ed-tool-panel" id="rPanel">
+        <!-- Tabs for Tools/Audio -->
+        <div class="panel-tabs">
+          <div class="panel-tab on" data-ptab="tools">ツール</div>
+          <div class="panel-tab" data-ptab="audio">音声</div>
+          <div class="panel-tab" data-ptab="settings">設定</div>
+        </div>
+        <!-- Tools Tab -->
+        <div class="ptab-content on" id="ptabTools">
+          <!-- Drawing tools row -->
+          <div class="pnl-section">
+            <div class="pnl-label">描画ツール</div>
+            <div class="tool-grid">
+              <div class="tool-btn on" data-tool="pen"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg><span>ペン</span></div>
+              <div class="tool-btn" data-tool="eraser"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.14 3c-.51 0-1.02.2-1.41.59L2.59 14.73a2 2 0 000 2.83l2.58 2.61a2 2 0 002.83 0L19.14 9.03a2 2 0 000-2.83L16.55 3.59A2 2 0 0015.14 3z"/></svg><span>消す</span></div>
+              <div class="tool-btn" data-tool="fill"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.56 8.94L8.94 16.56a1.5 1.5 0 01-2.12 0l-2.38-2.38a1.5 1.5 0 010-2.12L12.06 4.44a1.5 1.5 0 012.12 0l2.38 2.38a1.5 1.5 0 010 2.12z"/><path d="M19 14s3 3.5 3 5a3 3 0 01-6 0c0-1.5 3-5 3-5z" opacity=".5"/></svg><span>塗り</span></div>
+              <div class="tool-btn" data-tool="line"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="19" x2="19" y2="5"/></svg><span>直線</span></div>
+              <div class="tool-btn" data-tool="rect"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="1"/></svg><span>四角</span></div>
+              <div class="tool-btn" data-tool="circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg><span>丸</span></div>
+              <div class="tool-btn" data-tool="text"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 4h14v3h-1.5V5.5h-5V18H14v1.5h-4V18h1.5V5.5h-5V7H5V4z"/></svg><span>文字</span></div>
+              <div class="tool-btn" data-tool="select"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="4 3"><rect x="3" y="3" width="18" height="18" rx="1"/></svg><span>選択</span></div>
+              <div class="tool-btn" data-tool="lasso"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.5 2 2 5.6 2 10c0 3 2.2 5.6 5.4 6.8-.2 1.4-.8 2.8-1.4 3.2 2-.2 4-1.2 5.2-2.6.3 0 .5 0 .8 0 5.5 0 10-3.6 10-8S17.5 2 12 2z" stroke-dasharray="3 3"/></svg><span>投げ縄</span></div>
+              <div class="tool-btn" data-tool="hand"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 7v10a4 4 0 01-4 4h-5.3a4 4 0 01-2.83-1.17L2 12.96l1.2-1.12a1.5 1.5 0 011.16-.23l2.64 1V6a1 1 0 012 0v6h1V3.5a1 1 0 012 0V12h1V3a1 1 0 012 0v9.5h1V5.5a1 1 0 012 0z"/></svg><span>移動</span></div>
+            </div>
+          </div>
+          <!-- Colors -->
+          <div class="pnl-section">
+            <div class="pnl-label">カラー</div>
+            <div class="color-grid">
+              <div class="color-dot on" style="background:#111" data-c="#111111"></div>
+              <div class="color-dot" style="background:#E02020" data-c="#E02020"></div>
+              <div class="color-dot" style="background:#2060E0" data-c="#2060E0"></div>
+              <div class="color-dot" style="background:#20A020" data-c="#20A020"></div>
+              <div class="color-dot" style="background:#F0C000" data-c="#F0C000"></div>
+              <div class="color-dot" style="background:#FF6B9D" data-c="#FF6B9D"></div>
+              <div class="color-dot" style="background:#9C27B0" data-c="#9C27B0"></div>
+              <div class="color-dot" style="background:#FF8C00" data-c="#FF8C00"></div>
+              <div class="color-dot" style="background:#8B4513" data-c="#8B4513"></div>
+              <div class="color-dot" style="background:#FFF;border-color:#ccc" data-c="#FFFFFF"></div>
+            </div>
+            <div class="custom-color-row">
+              <span>カスタム:</span>
+              <input type="color" id="ccPick" value="#111111">
+            </div>
+          </div>
+          <!-- SV Picker -->
+          <div class="pnl-section">
+            <div class="sv-picker-area">
+              <canvas id="svPicker" width="180" height="100"></canvas>
+              <div class="sv-cursor" id="svCursor"></div>
+            </div>
+            <div class="hue-bar-area">
+              <canvas id="hueBar" width="180" height="14"></canvas>
+              <div class="hue-cursor" id="hueCursor"></div>
+            </div>
+            <div class="hex-row">
+              <span>HEX:</span>
+              <input type="text" id="hexInput" value="#111111" maxlength="7">
+            </div>
+          </div>
+          <!-- Pen Size/Alpha -->
+          <div class="pnl-section">
+            <div class="pen-size-row">
+              <div class="pen-dot" data-size="1" style="width:6px;height:6px"></div>
+              <div class="pen-dot" data-size="2" style="width:9px;height:9px"></div>
+              <div class="pen-dot on" data-size="4" style="width:13px;height:13px"></div>
+              <div class="pen-dot" data-size="8" style="width:17px;height:17px"></div>
+              <div class="pen-dot" data-size="16" style="width:22px;height:22px"></div>
+            </div>
+            <div class="slider-row">
+              <span>透明度:</span>
+              <input type="range" id="alphaRng" min="5" max="100" value="100">
+              <span id="alphaLbl">100%</span>
+            </div>
+            <div class="outline-row">
+              <label id="outlineLbl"><input type="checkbox" id="outlineChk"> 縁取りペン</label>
+              <div class="outline-opts" id="outlineOpts">
+                <input type="color" id="outlineCol" value="#FFFFFF">
+                <input type="range" id="outlineW" min="1" max="12" value="3" style="width:40px">
+              </div>
+            </div>
+          </div>
+          <!-- Zoom -->
+          <div class="pnl-section">
+            <div class="zoom-row">
+              <button class="sm-btn" id="zoomInBtn">+</button>
+              <button class="sm-btn" id="zoomOutBtn">-</button>
+              <button class="sm-btn" id="resetVBtn">100%</button>
+            </div>
+          </div>
+        </div>
+        <!-- Audio Tab -->
+        <div class="ptab-content" id="ptabAudio">
+          <div class="pnl-section">
+            <div class="pnl-label">BGM</div>
+            <div class="as-ctrl-row">
+              <label class="as-file-btn">BGMファイル読込<input type="file" id="bgmFile" accept="audio/*" style="display:none"></label>
+              <button class="sm-btn" id="bgmClearBtn">クリア</button>
+            </div>
+            <div class="as-ctrl-row">
+              <span>音量:</span>
+              <input type="range" id="bgmVol" min="0" max="100" value="80">
+              <span id="bgmVolLbl">80%</span>
+            </div>
+          </div>
+          <div class="pnl-section">
+            <div class="pnl-label">録音</div>
+            <div class="as-ctrl-row">
+              <button class="sm-btn rec" id="recSyncBtn">再生+録音</button>
+              <button class="sm-btn" id="recClearBtn">クリア</button>
+            </div>
+          </div>
+          <div class="pnl-section">
+            <div class="pnl-label">フレーム効果音</div>
+            <div class="as-ctrl-row">
+              <select id="sfxSel"><option value="">なし</option><option value="click">カチッ</option><option value="pop">ポン</option><option value="swoosh">シュッ</option><option value="boing">ボヨン</option><option value="bell">チリン</option></select>
+              <button class="sm-btn" id="asSfxBtn">割当</button>
+              <button class="sm-btn" id="asSfxPreview">試聴</button>
+            </div>
+          </div>
+          <div class="pnl-section">
+            <div class="pnl-label">タイムライン</div>
+            <div class="as-waveform-mini">
+              <canvas id="asWaveCvs" width="300" height="60"></canvas>
+              <div class="as-playhead" id="asPlayhead"></div>
+            </div>
+            <span class="as-duration" id="asDuration">0.0s</span>
+          </div>
+          <div class="pnl-section">
+            <div class="as-ctrl-row">
+              <button class="sm-btn primary" id="asPreviewBtn">3秒プレビュー</button>
+              <button class="sm-btn primary" id="asFullPreviewBtn">全体再生</button>
+            </div>
+          </div>
+        </div>
+        <!-- Settings Tab -->
+        <div class="ptab-content" id="ptabSettings">
+          <div class="pnl-section">
+            <div class="pnl-label">レイヤー</div>
+            <div id="layerList"></div>
+            <div class="layer-btns">
+              <button class="sm-btn" id="addPhotoBtn">写真</button>
+              <button class="sm-btn" id="mergeBtn">統合</button>
+            </div>
+          </div>
+          <div class="pnl-section">
+            <div class="pnl-label">設定</div>
+            <button class="pnl-btn" id="onionBtn">オニオンスキン</button>
+            <button class="pnl-btn" id="paperBtn">紙色</button>
+            <button class="pnl-btn" id="ratioBtn">画面比率</button>
+            <button class="pnl-btn" id="rotateBtn">回転</button>
+            <button class="pnl-btn" id="flipHBtn">左右反転</button>
+          </div>
+          <div class="pnl-section">
+            <div class="pnl-label">保存 / 出力</div>
+            <button class="pnl-btn" id="saveBtn">プロジェクト保存</button>
+            <button class="pnl-btn" id="loadBtn">プロジェクト読込</button>
+            <button class="pnl-btn" id="expGifBtn">GIF出力</button>
+            <button class="pnl-btn" id="expMp4Btn">MP4出力</button>
+            <button class="pnl-btn" id="snsShareBtn">SNSシェア</button>
+            <button class="pnl-btn danger" id="clrAllBtn">全消し</button>
+          </div>
+          <div class="pnl-section">
+            <button class="pnl-btn back" id="backToGalBtn">ギャラリーへ戻る</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Frame Context Menu (floating, toggled) -->
+      <div class="ed-frame-menu" id="frameMenu" style="display:none">
+        <button class="fm-btn" id="fmInsert">挿入</button>
+        <button class="fm-btn" id="fmDelete">消す</button>
+        <button class="fm-btn" id="fmCopy">コピー</button>
+        <button class="fm-btn" id="fmPaste">振り貼り</button>
+      </div>
+      <button class="ed-frame-menu-toggle" id="frameMenuToggle">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+      </button>
+    </div>
+
+    <!-- Film Strip Timeline -->
+    <div class="ed-filmstrip-wrap">
+      <div class="ed-tl-controls">
+        <span>速度:<span id="fpsN">8</span>fps</span>
+        <input type="range" id="fpsR" min="1" max="30" value="8">
+        <button class="tl-btn" id="addFBtn">+1</button>
+        <button class="tl-btn" id="addMFBtn">+N</button>
+        <button class="tl-btn" id="delFBtn">Del</button>
+        <button class="tl-btn" id="cpFBtn">複写</button>
+        <button class="tl-btn" id="psFBtn">貼付</button>
+        <button class="tl-toggle" id="tlToggle"><svg viewBox="0 0 24 24" fill="currentColor" width="10" height="10"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg></button>
+      </div>
+      <div class="ed-filmstrip" id="tls">
+        <!-- Timeline frames rendered here -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== VIEWER SCREEN ==================== -->
+<div id="viewerScreen" class="screen">
+  <div class="viewer-layout">
+    <div class="viewer-canvas-area"><canvas id="viewerCvs" width="640" height="480"></canvas></div>
+    <div class="viewer-controls">
+      <button class="gal-pb" id="vwFirstBtn"><svg viewBox="0 0 24 24"><path d="M18 18l-8.5-6L18 6v12zM8 6H6v12h2z" fill="currentColor"/></svg></button>
+      <button class="gal-pb" id="vwPrevBtn"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" fill="currentColor"/></svg></button>
+      <button class="gal-pb play" id="vwPlayBtn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></button>
+      <button class="gal-pb" id="vwNextBtn"><svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" fill="currentColor"/></svg></button>
+      <button class="gal-pb" id="vwLastBtn"><svg viewBox="0 0 24 24"><path d="M6 6l8.5 6L6 18V6zm10 0h2v12h-2z" fill="currentColor"/></svg></button>
+      <span class="viewer-frame-info"><span id="vwFrameNum">1</span>/<span id="vwFrameTotal">1</span></span>
+      <button class="gal-pb" id="vwBackBtn" style="margin-left:auto"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" fill="currentColor"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== DIALOGS ==================== -->
+<!-- Paper Color -->
+<div class="modal-overlay" id="paperMo">
+  <div class="modal-box">
+    <h3>紙色</h3>
+    <div class="paper-grid">
+      <div class="paper-opt on" data-p="#FFFFFF" style="background:#FFFFFF"></div>
+      <div class="paper-opt" data-p="#1a1a1a" style="background:#1a1a1a"></div>
+      <div class="paper-opt" data-p="#FFF8E7" style="background:#FFF8E7"></div>
+      <div class="paper-opt" data-p="#E8F5E9" style="background:#E8F5E9"></div>
+      <div class="paper-opt" data-p="#E3F2FD" style="background:#E3F2FD"></div>
+      <div class="paper-opt" data-p="#FCE4EC" style="background:#FCE4EC"></div>
+      <div class="paper-opt" data-p="#F3E5F5" style="background:#F3E5F5"></div>
+      <div class="paper-opt" data-p="#FFF3E0" style="background:#FFF3E0"></div>
+      <div class="paper-opt" data-p="#ECEFF1" style="background:#ECEFF1"></div>
+      <div class="paper-opt" data-p="#263238" style="background:#263238"></div>
+    </div>
+    <button class="modal-close-btn" onclick="this.closest('.modal-overlay').classList.remove('show')">閉じる</button>
+  </div>
+</div>
+<!-- Ratio -->
+<div class="modal-overlay" id="ratioMo">
+  <div class="modal-box">
+    <h3>画面比率</h3>
+    <div class="ratio-grid">
+      <div class="ratio-opt on" data-r="4:3" data-w="512" data-h="384"><div class="ratio-preview" style="width:44px;height:33px"></div><span>4:3</span></div>
+      <div class="ratio-opt" data-r="16:9" data-w="512" data-h="288"><div class="ratio-preview" style="width:44px;height:25px"></div><span>16:9</span></div>
+      <div class="ratio-opt" data-r="1:1" data-w="400" data-h="400"><div class="ratio-preview" style="width:33px;height:33px"></div><span>1:1</span></div>
+      <div class="ratio-opt" data-r="3:4" data-w="384" data-h="512"><div class="ratio-preview" style="width:27px;height:36px"></div><span>3:4</span></div>
+      <div class="ratio-opt" data-r="9:16" data-w="288" data-h="512"><div class="ratio-preview" style="width:20px;height:36px"></div><span>9:16</span></div>
+    </div>
+    <p class="modal-note">*変更でデータクリア</p>
+    <button class="modal-close-btn" onclick="this.closest('.modal-overlay').classList.remove('show')">閉じる</button>
+  </div>
+</div>
+<!-- Ratio Confirm -->
+<div class="modal-overlay" id="ratioConfMo">
+  <div class="modal-box compact">
+    <h3>確認</h3>
+    <p>比率変更でデータがクリアされます</p>
+    <div class="modal-btns">
+      <button class="modal-btn primary" id="ratioConfOk">変更</button>
+      <button class="modal-btn" id="ratioConfNo">戻る</button>
+    </div>
+  </div>
+</div>
+<!-- Text Input -->
+<div class="modal-overlay" id="txMo">
+  <div class="modal-box">
+    <h3>テキスト入力</h3>
+    <input type="text" id="txIn" class="modal-input" placeholder="テキスト..." maxlength="100">
+    <div class="modal-row"><span>サイズ:</span><input type="range" id="txSz" min="12" max="80" value="28" style="width:90px"><span id="txSL">28px</span></div>
+    <div class="modal-row"><label class="modal-check-label" id="txOLLbl"><input type="checkbox" id="txOL" checked> 袋文字</label></div>
+    <div class="modal-row" id="txOLO"><span>縁色:</span><input type="color" id="txOC" value="#FFFFFF" class="mini-color"><span>縁幅:</span><input type="range" id="txOLW" min="1" max="16" value="5" style="width:60px"><span id="txOLWL">5px</span></div>
+    <div class="modal-btns"><button class="modal-btn primary" id="txOk">配置</button><button class="modal-btn" id="txCn">戻る</button></div>
+  </div>
+</div>
+<!-- Selection -->
+<div class="modal-overlay" id="selMo">
+  <div class="modal-box compact">
+    <h3>選択範囲</h3>
+    <div class="modal-btns">
+      <button class="modal-btn primary" id="selCpBtn">コピー</button>
+      <button class="modal-btn primary" id="selCtBtn">カット</button>
+      <button class="modal-btn outline" id="selOutBtn">縁取り</button>
+    </div>
+    <div class="modal-row"><span>縁色:</span><input type="color" id="selOC" value="#FFFFFF" class="mini-color"><span>幅:</span><input type="range" id="selOW" min="1" max="20" value="5" style="width:50px"><span id="selOWL">5</span></div>
+    <button class="modal-btn" id="selCnBtn">閉じる</button>
+  </div>
+</div>
+<!-- Rotate -->
+<div class="modal-overlay" id="rotMo">
+  <div class="modal-box compact">
+    <h3>回転</h3>
+    <div class="modal-btns">
+      <button class="modal-btn primary" data-rot="90">90度</button>
+      <button class="modal-btn primary" data-rot="-90">-90度</button>
+      <button class="modal-btn primary" data-rot="180">180度</button>
+    </div>
+    <div class="modal-row"><span>任意:</span><input type="number" id="rotAng" value="45" class="modal-num-input"><button class="modal-btn primary" id="rotCBtn">回転</button></div>
+    <button class="modal-close-btn" onclick="this.closest('.modal-overlay').classList.remove('show')">閉じる</button>
+  </div>
+</div>
+<!-- Export Progress -->
+<div class="modal-overlay" id="expMo">
+  <div class="modal-box compact">
+    <h3 id="expTi">出力中...</h3>
+    <div class="progress-bar"><div class="progress-fill" id="expBar"></div></div>
+    <p class="progress-msg" id="expMsg"></p>
+  </div>
+</div>
+<!-- Export Quality -->
+<div class="modal-overlay" id="qualMo">
+  <div class="modal-box">
+    <h3>出力設定</h3>
+    <p id="qualLabel">GIF</p>
+    <div class="quality-opts">
+      <label class="qual-opt on"><input type="radio" name="qual" value="low" checked>低画質</label>
+      <label class="qual-opt"><input type="radio" name="qual" value="mid">中画質</label>
+      <label class="qual-opt"><input type="radio" name="qual" value="high">高画質</label>
+    </div>
+    <p class="modal-note"><span id="qualDur">0.0</span>秒 (<span id="qualFr">0</span>F)</p>
+    <div class="modal-btns"><button class="modal-btn primary" id="qualOk">出力</button><button class="modal-btn" onclick="this.closest('.modal-overlay').classList.remove('show')">戻る</button></div>
+  </div>
+</div>
+<!-- Goto Frame -->
+<div class="modal-overlay" id="gotoMo">
+  <div class="modal-box compact">
+    <h3>フレーム指定</h3>
+    <div class="modal-row" style="justify-content:center"><input type="number" id="gotoNum" min="1" value="1" class="modal-num-input"><span>/ <span id="gotoMax">1</span></span></div>
+    <div class="modal-btns"><button class="modal-btn primary" id="gotoOk">移動</button><button class="modal-btn" onclick="this.closest('.modal-overlay').classList.remove('show')">閉じる</button></div>
+  </div>
+</div>
+<!-- Bulk Add -->
+<div class="modal-overlay" id="addMMo">
+  <div class="modal-box compact">
+    <h3>一括追加</h3>
+    <div class="modal-row" style="justify-content:center"><input type="number" id="addMNum" min="1" max="200" value="5" class="modal-num-input"><span>フレーム</span></div>
+    <div class="modal-btns"><button class="modal-btn primary" id="addMOk">追加</button><button class="modal-btn" onclick="this.closest('.modal-overlay').classList.remove('show')">閉じる</button></div>
+  </div>
+</div>
+<!-- Layer Merge -->
+<div class="modal-overlay" id="mergeMo">
+  <div class="modal-box compact">
+    <h3>レイヤー統合</h3>
+    <div class="modal-btns"><button class="modal-btn primary" id="mergeDownBtn">下に統合</button><button class="modal-btn primary" id="mergeAllBtn">全統合→A</button></div>
+    <button class="modal-close-btn" onclick="this.closest('.modal-overlay').classList.remove('show')">閉じる</button>
+  </div>
+</div>
+<!-- Title Edit -->
+<div class="modal-overlay" id="titleMo">
+  <div class="modal-box compact">
+    <h3>メモの名前を編集</h3>
+    <input type="text" id="titleInput" class="modal-input" placeholder="メモの名前..." maxlength="50">
+    <div class="modal-btns"><button class="modal-btn primary" id="titleSave">保存</button><button class="modal-btn" id="titleCancel">キャンセル</button></div>
+  </div>
+</div>
+<!-- SNS Share -->
+<div class="modal-overlay" id="shareMo">
+  <div class="modal-box">
+    <h3>SNSにシェア</h3>
+    <p class="modal-note">GIFを生成してシェアします</p>
+    <div class="share-grid">
+      <button class="share-btn" data-sns="twitter"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg><span>X (Twitter)</span></button>
+      <button class="share-btn" data-sns="line"><svg viewBox="0 0 24 24" width="24" height="24" fill="#06C755"><path d="M12 2C6.48 2 2 5.73 2 10.25c0 3.15 2.36 5.89 5.73 7.25-.08.28-.5 1.84-.58 2.11-.1.37.14.37.29.27.12-.08 1.75-1.19 2.46-1.67.68.1 1.39.15 2.1.15 5.52 0 10-3.73 10-8.25S17.52 2 12 2z"/></svg><span>LINE</span></button>
+      <button class="share-btn" data-sns="clipboard"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg><span>URLコピー</span></button>
+      <button class="share-btn" data-sns="download"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg><span>ダウンロード</span></button>
+    </div>
+    <button class="modal-close-btn" onclick="this.closest('.modal-overlay').classList.remove('show')">閉じる</button>
+  </div>
+</div>
+<!-- Import -->
+<div class="modal-overlay" id="importMo">
+  <div class="modal-box">
+    <h3>ファイル読み込み</h3>
+    <div class="import-drop" id="importDrop">
+      <svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+      <p>ここにファイルをドロップ</p>
+      <button class="modal-btn primary" id="importFileBtn">ファイルを選択</button>
+      <input type="file" id="importFileInput" accept=".ugomemo,.json,.png,.gif,.jpg,.jpeg" style="display:none">
+    </div>
+    <button class="modal-close-btn" onclick="this.closest('.modal-overlay').classList.remove('show')">閉じる</button>
+  </div>
+</div>
+<!-- Context Menu (right-click) -->
+<div class="ctx-menu" id="ctxMenu">
+  <div class="ctx-item" data-ctx="undo">元に戻す</div>
+  <div class="ctx-item" data-ctx="redo">やり直し</div>
+  <div class="ctx-item" data-ctx="paste">貼り付け</div>
+  <div class="ctx-item" data-ctx="clear">レイヤークリア</div>
+</div>
+<!-- Mobile overlay -->
+<div class="mob-overlay" id="mobOv"></div>
+<!-- Hidden inputs -->
+<input type="file" id="imgIn" accept="image/*" style="display:none">
+<input type="file" id="projIn" accept=".ugomemo" style="display:none">
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+<div class="save-indicator" id="saveInd">自動保存完了</div>
+
+<!-- Scripts (same order) -->
+<script src="js/worker.js"></script>
+<script src="js/db.js"></script>
+<script src="js/state.js"></script>
+<script src="js/canvas.js"></script>
+<script src="js/drawing.js"></script>
+<script src="js/layers.js"></script>
+<script src="js/frames.js"></script>
+<script src="js/timeline.js"></script>
+<script src="js/pointer.js"></script>
+<script src="js/tools-ui.js"></script>
+<script src="js/selection.js"></script>
+<script src="js/text.js"></script>
+<script src="js/transform.js"></script>
+<script src="js/playback.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/export.js"></script>
+<script src="js/gallery.js"></script>
+<script src="js/viewer.js"></script>
+<script src="js/share.js"></script>
+<script src="js/colorpicker.js"></script>
+<script src="js/shortcuts.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
