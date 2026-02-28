@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="theme-color" content="#FF6600">
+  <meta name="viewport"
+    content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="うごくノート">
+  <meta name="theme-color" content="#FF6600">
+  <meta name="description" content="うごくノート - うごメモ風アニメーション作成ツール">
+  <title>うごくノート</title>
+  <link rel="manifest" href="./static/manifest.json">
+  <link rel="apple-touch-icon" href="./static/icons/icon-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="./static/icons/icon-192.png">
+  <link rel="stylesheet" href="./static/css/app.css">
+  <script src="./static/js/export/mp4-muxer.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://unpkg.com/polygon-clipping@0.15.7/dist/polygon-clipping.umd.min.js"></script>
+  <script src="https://unpkg.com/fflate@0.8.2/umd/index.js"></script>
+</head>
+
+<body>
+  <div id="app"></div>
+
+  <script src="./static/js/core/namespace.js"></script>
+  <script src="./static/js/core/utils.js"></script>
+  <script src="./static/js/core/renderer.js"></script>
+  <script src="./static/js/core/state.js"></script>
+  <script src="./static/js/core/engine.js"></script>
+  <script src="./static/js/core/vector.js"></script>
+
+  <script src="./static/js/tools/drawing.js"></script>
+  <script src="./static/js/audio/audio.js"></script>
+  <script src="./static/js/timeline/timeline.js"></script>
+  <script src="./static/js/export/export.js"></script>
+  <script src="./static/js/storage/storage.js"></script>
+
+  <script src="./static/js/ui/builder.js"></script>
+
+  <script src="./static/js/app.js" data-worker-url="./static/js/workers/compute.js"></script>
+</body>
+
+</html>

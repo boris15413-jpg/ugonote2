@@ -1,0 +1,19 @@
+# 開発ツール
+node_modules/
+*.cjs
+
+# 一時ファイル
+tmp/
+*.tmp
+*.log
+
+# OS生成ファイル
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# エディタ設定
+.vscode/
+.idea/
+*.swp
+*.swo
