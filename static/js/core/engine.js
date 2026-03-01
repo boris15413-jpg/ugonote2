@@ -245,11 +245,15 @@
           if (idx < 0) break;
           const pc = S.fc.get(S.frames[idx].id);
           if (!pc) continue;
+          
           const alpha = 1 - 0.3 * (off - 1);
           ctx.globalAlpha = Math.max(0.1, alpha);
-const tmp = document.createElement("canvas");
-          ((tmp.width = S.CW * dpr), (tmp.height = S.CH * dpr));
+          
+          const tmp = document.createElement("canvas");
+          tmp.width = S.CW * dpr;
+          tmp.height = S.CH * dpr;
           const tx = tmp.getContext("2d");
+          
           S.layerOrder.forEach((l) => {
             if (pc[l]) {
               tx.putImageData(pc[l], 0, 0);
@@ -265,11 +269,15 @@ const tmp = document.createElement("canvas");
             ctx.setTransform(1, 0, 0, 1, 0, 0);
             ctx.drawImage(tmp, 0, 0);
             ctx.restore();
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
             tx.clearRect(0, 0, S.CW * dpr, S.CH * dpr);
           });
-          
           ctx.globalCompositeOperation = "source-atop";
+          const r = 1 === off ? 255 : 80,
+                g2 = 80,
+                b = 1 === off ? 80 : 255;
+          ctx.fillStyle = `rgba(${r},${g2},${b},.25)`;
+          ctx.fillRect(0, 0, S.CW, S.CH);
+          ctx.globalCompositeOperation = "source-over"; // 合成モードを元に戻す
         }
         ctx.globalAlpha = 1;
       } else R.canvases.onC.style.opacity = "0";
